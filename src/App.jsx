@@ -5,6 +5,7 @@ import { PageColumn } from "./components/StyledComponents";
 import UploadStepper from "./components/UploadStepper";
 import RotationUploadInput from "./components/upload-inputs/RotationUploadInput";
 import RotationCoordinatorUploadInput from "./components/upload-inputs/RotationCoordinatorUploadInput";
+import EPAUploadInput from "./components/upload-inputs/EPAUploadInput";
 import AllRotationsDataGrid from "./components/tables/AllRotationsDataGrid";
 import GroupedResidentsDataGrid from "./components/tables/GroupedResidentsDataGrid";
 
@@ -66,6 +67,14 @@ function App() {
                 RCEmail: row.RCEmail ? row.RCEmail : "",
                 Assistant: row.Assistant ? row.Assistant : "",
                 AssistantEmail: row.AssistantEmail ? row.AssistantEmail : "",
+                JuniorPriority: row.JuniorPriority ? row.JuniorPriority : "",
+                JuniorDoWhenYouCan: row.JuniorDoWhenYouCan ? row.JuniorDoWhenYouCan : "",
+                JuniorOptional: row.JuniorOptional ? row.JuniorOptional : "",
+                SeniorPriority: row.SeniorPriority ? row.SeniorPriority : "",
+                SeniorDoWhenYouCan: row.SeniorDoWhenYouCan ? row.SeniorDoWhenYouCan : "",
+                SeniorOptional: row.SeniorOptional ? row.SeniorOptional : "",
+                JuniorRotationCards: row.JuniorRotationCards ? row.JuniorRotationCards : "",
+                SeniorRotationCards: row.SeniorRotationCards ? row.SeniorRotationCards : "",
             }));
 
         rotationsData.forEach((row) => {
@@ -154,7 +163,6 @@ function App() {
                 AssistantEmail: thisRotationsRCData ? thisRotationsRCData.AssistantEmail : "",
             };
         });
-        console.log("rots!: ", rots);
         return rots;
     };
 
@@ -171,6 +179,48 @@ function App() {
         // Move on to next step - uploading EPA Data
         setCanProceed(true);
     };
+
+    const augmentRotationsWithEPAData = (rotationsToAugment, EPAs) => {
+        const rots = rotationsToAugment.map((rot) => {
+            const juniorStage = rot.Block > 4 ? "FOD" : "TTD";
+            const seniorStage = "COD";
+
+            const thisRotationsJuniorEPAData = EPAs.find(
+                (epa) => epa.Rotation === rot.Rotation && epa.Stage === juniorStage
+            );
+
+            const thisRotationsSeniorEPAData = EPAs.find(
+                (epa) => epa.Rotation === rot.Rotation && epa.Stage === seniorStage
+            );
+
+            return {
+                ...rot,
+                JuniorPriority: thisRotationsJuniorEPAData ? thisRotationsJuniorEPAData.Priority : "",
+                JuniorDoWhenYouCan: thisRotationsJuniorEPAData ? thisRotationsJuniorEPAData.DoWhenYouCan : "",
+                JuniorOptional: thisRotationsJuniorEPAData ? thisRotationsJuniorEPAData.Optional : "",
+                SeniorPriority: thisRotationsSeniorEPAData ? thisRotationsSeniorEPAData.Priority : "",
+                SeniorDoWhenYouCan: thisRotationsSeniorEPAData ? thisRotationsSeniorEPAData.DoWhenYouCan : "",
+                SeniorOptional: thisRotationsSeniorEPAData ? thisRotationsSeniorEPAData.Optional : "",
+                JuniorRotationCards: thisRotationsJuniorEPAData ? thisRotationsJuniorEPAData.RotationCards : "",
+                SeniorRotationCards: thisRotationsSeniorEPAData ? thisRotationsSeniorEPAData.RotationCards : "",
+            };
+        });
+        return rots;
+    };
+
+    // EPA Upload Handler
+    const onEPADataLoaded = (data) => {
+        setEPAs(data);
+        const EPAAugmentedRotations = augmentRotationsWithEPAData(rotations, data);
+        setRotations(EPAAugmentedRotations);
+
+        const groupedEPAAugmentedRotations = groupByUniqueRotations(EPAAugmentedRotations);
+        console.log("groupedEPAAugmentedROtations: ", groupedEPAAugmentedRotations);
+        setJuniorRotations(filterOnlyJuniors(groupedEPAAugmentedRotations));
+        setSeniorRotations(filterOnlySeniors(groupedEPAAugmentedRotations));
+        setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedEPAAugmentedRotations));
+    };
+
     return (
         <PageColumn>
             <UploadStepper activeStep={step} changeActiveStep={changeActiveStep} canProceed={canProceed} />
@@ -178,6 +228,7 @@ function App() {
             {step === 1 && (
                 <RotationCoordinatorUploadInput onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded} />
             )}
+            {step === 2 && <EPAUploadInput onEPADataLoaded={onEPADataLoaded} />}
             {rotations.length > 0 && (
                 <>
                     <TableSection>
@@ -193,6 +244,7 @@ function App() {
                         <AllRotationsDataGrid
                             rotationsData={rotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                            EPADataAvailable={EPAs.length > 0}
                         />
                     </TableSection>
                     <TableSection>
@@ -208,6 +260,7 @@ function App() {
                         <GroupedResidentsDataGrid
                             rotationsData={juniorRotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                            EPADataAvailable={EPAs.length > 0}
                         />
                     </TableSection>
                     <TableSection>
@@ -223,6 +276,7 @@ function App() {
                         <GroupedResidentsDataGrid
                             rotationsData={seniorRotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                            EPADataAvailable={EPAs.length > 0}
                         />
                     </TableSection>
                     <TableSection>
@@ -238,6 +292,7 @@ function App() {
                         <GroupedResidentsDataGrid
                             rotationsData={juniorAndSeniorRotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                            EPADataAvailable={EPAs.length > 0}
                         />
                     </TableSection>
                 </>

@@ -32,10 +32,18 @@ const columns = [
     { field: "RCEmail", headerName: "RC Email", minWidth: defaultMinColWidth, flex: 1 },
     { field: "Assistant", headerName: "Assistant", minWidth: defaultMinColWidth, flex: 1 },
     { field: "AssistantEmail", headerName: "Assistant Email", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "JuniorPriority", headerName: "Junior Priority", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "JuniorDoWhenYouCan", headerName: "Junior Do When You Can", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "JuniorOptional", headerName: "Senior Optional", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "SeniorPriority", headerName: "Senior Priority", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "SeniorDoWhenYouCan", headerName: "Senior Do When You Can", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "SeniorOptional", headerName: "Senior Optional", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "JuniorRotationCards", headerName: "Junior Rotation Cards", minWidth: defaultMinColWidth, flex: 1 },
+    { field: "SeniorRotationCards", headerName: "Senior Rotation Cards", minWidth: defaultMinColWidth, flex: 1 },
 ];
 
 export default function AllRotationsDataGrid(props) {
-    const { rotationsData, rotationCoordinatorDataAvailable = false } = props;
+    const { rotationsData, rotationCoordinatorDataAvailable = false, EPADataAvailable = false } = props;
 
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({
         RotationCoordinator: false,
@@ -43,6 +51,14 @@ export default function AllRotationsDataGrid(props) {
         RCEmail: false,
         Assistant: false,
         AssistantEmail: false,
+        JuniorPriority: false,
+        JuniorDoWhenYouCan: false,
+        JuniorOptional: false,
+        SeniorPriority: false,
+        SeniorDoWhenYouCan: false,
+        SeniorOptional: false,
+        JuniorRotationCards: false,
+        SeniorRotationCards: false,
     });
 
     useEffect(() => {
@@ -52,8 +68,16 @@ export default function AllRotationsDataGrid(props) {
             RCEmail: rotationCoordinatorDataAvailable,
             Assistant: rotationCoordinatorDataAvailable,
             AssistantEmail: rotationCoordinatorDataAvailable,
+            JuniorPriority: EPADataAvailable,
+            JuniorDoWhenYouCan: EPADataAvailable,
+            JuniorOptional: EPADataAvailable,
+            SeniorPriority: EPADataAvailable,
+            SeniorDoWhenYouCan: EPADataAvailable,
+            SeniorOptional: EPADataAvailable,
+            JuniorRotationCards: EPADataAvailable,
+            SeniorRotationCards: EPADataAvailable,
         });
-    }, [rotationCoordinatorDataAvailable]);
+    }, [rotationCoordinatorDataAvailable, EPADataAvailable]);
 
     return (
         <>

@@ -80,10 +80,66 @@ const columns = [
     { field: "RCEmail", headerName: "RC Email", minWidth: defaultMinColWidth, flex: 1 },
     { field: "Assistant", headerName: "Assistant", minWidth: defaultMinColWidth, flex: 1 },
     { field: "AssistantEmail", headerName: "Assistant Email", minWidth: defaultMinColWidth, flex: 1 },
+    {
+        field: "JuniorPriority",
+        headerName: "Junior Priority",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "JuniorDoWhenYouCan",
+        headerName: "Junior Do When You Can",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "JuniorOptional",
+        headerName: "Senior Optional",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "SeniorPriority",
+        headerName: "Senior Priority",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "SeniorDoWhenYouCan",
+        headerName: "Senior Do When You Can",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "SeniorOptional",
+        headerName: "Senior Optional",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "JuniorRotationCards",
+        headerName: "Junior Rotation Cards",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
+    {
+        field: "SeniorRotationCards",
+        headerName: "Senior Rotation Cards",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        renderCell: formatAsWrappingCell,
+    },
 ];
 
 export default function GroupedResidentsDataGrid(props) {
-    const { rotationsData, rotationCoordinatorDataAvailable = false } = props;
+    const { rotationsData, rotationCoordinatorDataAvailable = false, EPADataAvailable = false } = props;
     console.log("rotationsData: ", rotationsData);
 
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({
@@ -92,6 +148,14 @@ export default function GroupedResidentsDataGrid(props) {
         RCEmail: false,
         Assistant: false,
         AssistantEmail: false,
+        JuniorPriority: false,
+        JuniorDoWhenYouCan: false,
+        JuniorOptional: false,
+        SeniorPriority: false,
+        SeniorDoWhenYouCan: false,
+        SeniorOptional: false,
+        JuniorRotationCards: false,
+        SeniorRotationCards: false,
     });
 
     useEffect(() => {
@@ -101,8 +165,16 @@ export default function GroupedResidentsDataGrid(props) {
             RCEmail: rotationCoordinatorDataAvailable,
             Assistant: rotationCoordinatorDataAvailable,
             AssistantEmail: rotationCoordinatorDataAvailable,
+            JuniorPriority: EPADataAvailable,
+            JuniorDoWhenYouCan: EPADataAvailable,
+            JuniorOptional: EPADataAvailable,
+            SeniorPriority: EPADataAvailable,
+            SeniorDoWhenYouCan: EPADataAvailable,
+            SeniorOptional: EPADataAvailable,
+            JuniorRotationCards: EPADataAvailable,
+            SeniorRotationCards: EPADataAvailable,
         });
-    }, [rotationCoordinatorDataAvailable]);
+    }, [rotationCoordinatorDataAvailable, EPADataAvailable]);
 
     return (
         <>
@@ -112,13 +184,21 @@ export default function GroupedResidentsDataGrid(props) {
                         rows={rotationsData}
                         getRowHeight={(params) => {
                             //console.log("params: ", params);
-                            const maxNameRows = Math.max(
+                            const maxLinesInRow = Math.max(
                                 params.model.PGY1s.split("\n").length,
                                 params.model.PGY2s.split("\n").length,
-                                params.model.PGY3s.split("\n").length
+                                params.model.PGY3s.split("\n").length,
+                                params.model.JuniorPriority.split("\n").length,
+                                params.model.JuniorDoWhenYouCan.split("\n").length,
+                                params.model.JuniorOptional.split("\n").length,
+                                params.model.SeniorPriority.split("\n").length,
+                                params.model.SeniorDoWhenYouCan.split("\n").length,
+                                params.model.SeniorOptional.split("\n").length,
+                                params.model.JuniorRotationCards.split("\n").length,
+                                params.model.SeniorRotationCards.split("\n").length
                             );
-                            if (maxNameRows > 1) {
-                                return 30 + 20 * maxNameRows;
+                            if (maxLinesInRow > 1) {
+                                return 30 + 20 * maxLinesInRow;
                             } else {
                                 return null;
                             }
