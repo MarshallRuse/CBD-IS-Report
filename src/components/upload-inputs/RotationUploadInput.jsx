@@ -54,7 +54,7 @@ export default function RotationUploadInput(props) {
     return (
         <>
             <InputLabel component='h2' variant='h4' align='left'>
-                Rotation Data
+                Rotations Data
             </InputLabel>
             <InputContainer>
                 <RotationCSVReader

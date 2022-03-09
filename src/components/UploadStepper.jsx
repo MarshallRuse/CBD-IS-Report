@@ -1,34 +1,32 @@
 import React, { useState } from "react";
 import { Button, Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { styled } from "@mui/material/styles";
+
+const ClampedWidthBox = styled(Box)({
+    width: "clamp(350px, 700px, 100%)",
+});
 
 const steps = ["Rotation Data", "Rotation Coordinator Data", "EPA Data"];
 
-export default function UploadStepper() {
-    const [activeStep, setActiveStep] = useState(0);
+export default function UploadStepper(props) {
+    const { activeStep, changeActiveStep, canProceed = false } = props;
 
     const handleNext = () => {
-        let newSkipped = skipped;
-        if (isStepSkipped(activeStep)) {
-            newSkipped = new Set(newSkipped.values());
-            newSkipped.delete(activeStep);
-        }
-
-        setActiveStep((prevActiveStep) => prevActiveStep + 1);
-        setSkipped(newSkipped);
+        changeActiveStep(activeStep + 1);
     };
 
     const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
+        setActiveStep(activeStep - 1);
     };
 
     const handleReset = () => {
-        setActiveStep(0);
+        changeActiveStep(0);
     };
 
     return (
-        <Box sx={{ width: "100%" }}>
+        <ClampedWidthBox>
             <Stepper activeStep={activeStep} alternativeLabel>
-                {steps.map((label, index) => {
+                {steps.map((label) => {
                     return (
                         <Step key={label}>
                             <StepLabel>{label}</StepLabel>
@@ -45,17 +43,15 @@ export default function UploadStepper() {
                     </Box>
                 </>
             ) : (
-                <>
-                    <Typography sx={{ mt: 2, mb: 1 }}>Step {activeStep + 1}</Typography>
-                    <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
-                        <Button color='inherit' disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
-                            Back
-                        </Button>
-                        <Box sx={{ flex: "1 1 auto" }} />
-                        <Button onClick={handleNext}>{activeStep === steps.length - 1 ? "Finish" : "Next"}</Button>
-                    </Box>
-                </>
+                <Box sx={{ display: "flex", justifyContent: "center", gap: "2em", pt: 3 }}>
+                    <Button color='inherit' disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
+                        Back
+                    </Button>
+                    <Button disabled={!canProceed} onClick={handleNext}>
+                        {activeStep === steps.length - 1 ? "Finish" : "Next"}
+                    </Button>
+                </Box>
             )}
-        </Box>
+        </ClampedWidthBox>
     );
 }

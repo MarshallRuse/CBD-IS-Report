@@ -4,6 +4,7 @@ import { styled } from "@mui/material/styles";
 import { PageColumn } from "./components/StyledComponents";
 import UploadStepper from "./components/UploadStepper";
 import RotationUploadInput from "./components/upload-inputs/RotationUploadInput";
+import RotationCoordinatorUploadInput from "./components/upload-inputs/RotationCoordinatorUploadInput";
 import AllRotationsDataGrid from "./components/tables/AllRotationsDataGrid";
 import GroupedResidentsDataGrid from "./components/tables/GroupedResidentsDataGrid";
 
@@ -13,11 +14,34 @@ const TableSection = styled("div")({
 });
 
 function App() {
+    const [step, setStep] = useState(0);
+    const [canProceed, setCanProceed] = useState(false);
     const [rotations, setRotations] = useState([]);
     const [juniorRotations, setJuniorRotations] = useState([]);
     const [seniorRotations, setSeniorRotations] = useState([]);
     const [juniorAndSeniorRotations, setJuniorAndSeniorRotations] = useState([]);
+    const [rotationCoordinators, setRotationCoordinators] = useState([]);
+    const [EPAs, setEPAs] = useState([]);
 
+    // Stepper Controls
+    const changeActiveStep = (step) => {
+        setStep(step);
+        if (step === 0 && rotations.length > 0) {
+            setCanProceed(true);
+        } else if (step === 0 && rotations.length === 0) {
+            setCanProceed(false);
+        } else if (step === 1 && rotationCoordinators.length > 0) {
+            setCanProceed(true);
+        } else if (step === 1 && rotationCoordinators.length === 0) {
+            setCanProceed(false);
+        } else if (step === 2 && EPAs.length > 0) {
+            setCanProceed(true);
+        } else if (step === 2 && EPAs.length === 0) {
+            setCanProceed(false);
+        }
+    };
+
+    // Rotation formatting functions
     const groupByUniqueRotations = (rotationsData) => {
         const uniqueRotations = rotationsData
             .filter((row, ind, self) => {
@@ -37,6 +61,11 @@ function App() {
                 PGY2Emails: "",
                 PGY3s: "",
                 PGY3Emails: "",
+                RotationCoordinator: row.RotationCoordinator ? row.RotationCoordinator : "",
+                RCFirstName: row.RCFirstName ? row.RCFirstName : "",
+                RCEmail: row.RCEmail ? row.RCEmail : "",
+                Assistant: row.Assistant ? row.Assistant : "",
+                AssistantEmail: row.AssistantEmail ? row.AssistantEmail : "",
             }));
 
         rotationsData.forEach((row) => {
@@ -100,65 +129,119 @@ function App() {
         return onlyJuniorsAndSeniors;
     };
 
+    // Rotation Upload handler
     const onRotationsDataLoaded = (data) => {
         setRotations(data);
         const uniqueRotations = groupByUniqueRotations(data);
         setJuniorRotations(filterOnlyJuniors(uniqueRotations));
         setSeniorRotations(filterOnlySeniors(uniqueRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(uniqueRotations));
+        // Move on to next step - uploading Rotation Coordinator Data
+        setCanProceed(true);
+    };
+
+    const augmentRotationsWithRCData = (rotationsToAugment, rotCoordinators) => {
+        const rots = rotationsToAugment.map((rot) => {
+            const thisRotationsRCData = rotCoordinators.find(
+                (rc) => rc.Rotation === rot.Rotation && rc.Site === rot.Hospital
+            );
+            return {
+                ...rot,
+                RotationCoordinator: thisRotationsRCData ? thisRotationsRCData.RotationCoordinator : "",
+                RCFirstName: thisRotationsRCData ? thisRotationsRCData.FirstName : "",
+                RCEmail: thisRotationsRCData ? thisRotationsRCData.RotationCoordinatorEmail : "",
+                Assistant: thisRotationsRCData ? thisRotationsRCData.Assistant : "",
+                AssistantEmail: thisRotationsRCData ? thisRotationsRCData.AssistantEmail : "",
+            };
+        });
+        console.log("rots!: ", rots);
+        return rots;
+    };
+
+    // Rotation Coordinator Uplaod Handler
+    const onRotationCoordinatorDataLoaded = (data) => {
+        setRotationCoordinators(data);
+        const RCAugmentedRotations = augmentRotationsWithRCData(rotations, data);
+        setRotations(RCAugmentedRotations);
+
+        const groupedRCAugmentedRotations = groupByUniqueRotations(RCAugmentedRotations);
+        setJuniorRotations(filterOnlyJuniors(groupedRCAugmentedRotations));
+        setSeniorRotations(filterOnlySeniors(groupedRCAugmentedRotations));
+        setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedRCAugmentedRotations));
+        // Move on to next step - uploading EPA Data
+        setCanProceed(true);
     };
     return (
         <PageColumn>
-            <UploadStepper />
-            <RotationUploadInput onRotationsDataLoaded={onRotationsDataLoaded} />
-            <TableSection>
-                <Typography
-                    variant='h4'
-                    component='h2'
-                    align='center'
-                    color='primary'
-                    style={{ paddingBottom: "2rem" }}
-                >
-                    All Rotations Uploaded
-                </Typography>
-                <AllRotationsDataGrid rotationsData={rotations} />
-            </TableSection>
-            <TableSection>
-                <Typography
-                    variant='h4'
-                    component='h2'
-                    align='center'
-                    color='primary'
-                    style={{ paddingBottom: "2rem" }}
-                >
-                    Junior Rotations
-                </Typography>
-                <GroupedResidentsDataGrid rotationsData={juniorRotations} />
-            </TableSection>
-            <TableSection>
-                <Typography
-                    variant='h4'
-                    component='h2'
-                    align='center'
-                    color='primary'
-                    style={{ paddingBottom: "2rem" }}
-                >
-                    Senior Rotations
-                </Typography>
-                <GroupedResidentsDataGrid rotationsData={seniorRotations} />
-            </TableSection>
-            <TableSection>
-                <Typography
-                    variant='h4'
-                    component='h2'
-                    align='center'
-                    color='primary'
-                    style={{ paddingBottom: "2rem" }}
-                >
-                    Junior and Senior Rotations
-                </Typography>
-                <GroupedResidentsDataGrid rotationsData={juniorAndSeniorRotations} />
-            </TableSection>
+            <UploadStepper activeStep={step} changeActiveStep={changeActiveStep} canProceed={canProceed} />
+            {step === 0 && <RotationUploadInput onRotationsDataLoaded={onRotationsDataLoaded} />}
+            {step === 1 && (
+                <RotationCoordinatorUploadInput onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded} />
+            )}
+            {rotations.length > 0 && (
+                <>
+                    <TableSection>
+                        <Typography
+                            variant='h4'
+                            component='h2'
+                            align='center'
+                            color='primary'
+                            style={{ paddingBottom: "2rem" }}
+                        >
+                            All Rotations Uploaded
+                        </Typography>
+                        <AllRotationsDataGrid
+                            rotationsData={rotations}
+                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                        />
+                    </TableSection>
+                    <TableSection>
+                        <Typography
+                            variant='h4'
+                            component='h2'
+                            align='center'
+                            color='primary'
+                            style={{ paddingBottom: "2rem" }}
+                        >
+                            Junior Rotations
+                        </Typography>
+                        <GroupedResidentsDataGrid
+                            rotationsData={juniorRotations}
+                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                        />
+                    </TableSection>
+                    <TableSection>
+                        <Typography
+                            variant='h4'
+                            component='h2'
+                            align='center'
+                            color='primary'
+                            style={{ paddingBottom: "2rem" }}
+                        >
+                            Senior Rotations
+                        </Typography>
+                        <GroupedResidentsDataGrid
+                            rotationsData={seniorRotations}
+                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                        />
+                    </TableSection>
+                    <TableSection>
+                        <Typography
+                            variant='h4'
+                            component='h2'
+                            align='center'
+                            color='primary'
+                            style={{ paddingBottom: "2rem" }}
+                        >
+                            Junior and Senior Rotations
+                        </Typography>
+                        <GroupedResidentsDataGrid
+                            rotationsData={juniorAndSeniorRotations}
+                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                        />
+                    </TableSection>
+                </>
+            )}
         </PageColumn>
     );
 }
