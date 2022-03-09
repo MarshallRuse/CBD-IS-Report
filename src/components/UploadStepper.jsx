@@ -16,7 +16,7 @@ export default function UploadStepper(props) {
     };
 
     const handleBack = () => {
-        setActiveStep(activeStep - 1);
+        changeActiveStep(activeStep - 1);
     };
 
     const handleReset = () => {
@@ -47,7 +47,7 @@ export default function UploadStepper(props) {
                     <Button color='inherit' disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
                         Back
                     </Button>
-                    <Button disabled={!canProceed} onClick={handleNext}>
+                    <Button disabled={!canProceed} variant={canProceed ? "contained" : "text"} onClick={handleNext}>
                         {activeStep === steps.length - 1 ? "Finish" : "Next"}
                     </Button>
                 </Box>

@@ -12,7 +12,7 @@ const InputLabel = styled(Typography)({
 });
 
 export default function RotationUploadInput(props) {
-    const { onRotationsDataLoaded } = props;
+    const { onRotationsDataLoaded, onRotationsDataRemoved, reportFileName, rotationsFileName } = props;
 
     const [rotationDataFileName, setRotationDataFileName] = useState(undefined);
 
@@ -39,7 +39,7 @@ export default function RotationUploadInput(props) {
         rotations.push(relevantData);
     };
 
-    const allRotationDataRowsProcessed = (_, file) => {
+    const allRotationDataRowsProcessed = () => {
         onRotationsDataLoaded(rotations);
     };
 
@@ -47,8 +47,9 @@ export default function RotationUploadInput(props) {
         console.log(err);
     };
 
-    const handleOnRemoveElentraDataFile = (data) => {
+    const handleOnRemoveRotationDataFile = (data) => {
         setRotationDataFileName(undefined);
+        onRotationsDataRemoved();
     };
 
     return (
@@ -61,8 +62,9 @@ export default function RotationUploadInput(props) {
                     stepFunction={processRotationDataRow}
                     completeFunction={allRotationDataRowsProcessed}
                     onError={handleOnError}
-                    onRemoveFile={handleOnRemoveElentraDataFile}
-                    currentFileLoadedName={rotationDataFileName}
+                    onRemoveFile={handleOnRemoveRotationDataFile}
+                    reportFileName={reportFileName}
+                    currentFileLoadedName={rotationsFileName}
                 />
             </InputContainer>
         </>

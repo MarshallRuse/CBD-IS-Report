@@ -12,9 +12,12 @@ const InputLabel = styled(Typography)({
 });
 
 export default function RotationCoordinatorUploadInput(props) {
-    const { onRotationCoordinatorDataLoaded } = props;
-
-    const [rotationCoordinatorDataFileName, setRotationCoordinatorDataFileName] = useState(undefined);
+    const {
+        onRotationCoordinatorDataLoaded,
+        onRotationCoordinatorsDataRemoved,
+        reportFileName,
+        rotationCoordinatorsFileName,
+    } = props;
 
     const rotationCoordinators = [];
 
@@ -43,7 +46,7 @@ export default function RotationCoordinatorUploadInput(props) {
     };
 
     const handleOnRemoveRotationCoordinatorDataFile = (data) => {
-        setRotationCoordinatorDataFileName(undefined);
+        onRotationCoordinatorsDataRemoved();
     };
 
     return (
@@ -57,7 +60,8 @@ export default function RotationCoordinatorUploadInput(props) {
                     completeFunction={allRotationCoordinatorDataRowsProcessed}
                     onError={handleOnError}
                     onRemoveFile={handleOnRemoveRotationCoordinatorDataFile}
-                    currentFileLoadedName={rotationCoordinatorDataFileName}
+                    reportFileName={reportFileName}
+                    currentFileLoadedName={rotationCoordinatorsFileName}
                 />
             </InputContainer>
         </>

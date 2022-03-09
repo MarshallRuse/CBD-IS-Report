@@ -12,9 +12,7 @@ const InputLabel = styled(Typography)({
 });
 
 export default function EPAUploadInput(props) {
-    const { onEPADataLoaded } = props;
-
-    const [EPADataFileName, setEPADataFileName] = useState(undefined);
+    const { onEPADataLoaded, onEPAsDataRemoved, reportFileName, EPAsFileName } = props;
 
     const EPAs = [];
 
@@ -42,7 +40,7 @@ export default function EPAUploadInput(props) {
     };
 
     const handleOnRemoveEPADataFile = (data) => {
-        setEPADataFileName(undefined);
+        onEPAsDataRemoved();
     };
 
     return (
@@ -56,7 +54,8 @@ export default function EPAUploadInput(props) {
                     completeFunction={allEPADataRowsProcessed}
                     onError={handleOnError}
                     onRemoveFile={handleOnRemoveEPADataFile}
-                    currentFileLoadedName={EPADataFileName}
+                    reportFileName={reportFileName}
+                    currentFileLoadedName={EPAsFileName}
                 />
             </InputContainer>
         </>

@@ -5,6 +5,8 @@ import { CSVReader } from "react-papaparse";
 const EPAUploadButtonRef = createRef();
 
 export default function EPACSVReader(props) {
+    const { reportFileName, currentFileLoadedName, onRemoveFile } = props;
+
     const handleOpenDialog = (e) => {
         // Note that the ref is set async, so it might be null at some point
         if (EPAUploadButtonRef.current) {
@@ -30,8 +32,15 @@ export default function EPACSVReader(props) {
         if (EPAUploadButtonRef.current) {
             EPAUploadButtonRef.current.removeFile();
         }
-        props.onRemoveFile();
+        onRemoveFile();
     };
+
+    useEffect(() => {
+        const fileLoaded = EPAUploadButtonRef.current.inputFileRef?.current?.files?.[0];
+        if (fileLoaded) {
+            reportFileName(fileLoaded.name);
+        }
+    }, [EPAUploadButtonRef.current, EPAUploadButtonRef.current?.inputFileRef.current.files.length]);
 
     return (
         <CSVReader
@@ -66,6 +75,7 @@ export default function EPACSVReader(props) {
                             borderStyle: "solid",
                             borderColor: "#ccc",
                             borderRadius: "4px",
+                            color: "#808080",
                             flex: 1,
                             height: 45,
                             lineHeight: 2.5,
@@ -74,14 +84,14 @@ export default function EPACSVReader(props) {
                             paddingTop: 3,
                         }}
                     >
-                        {file ? file.name : props.currentFileLoadedName ? props.currentFileLoadedName : ""}
+                        {file ? file.name : currentFileLoadedName ? currentFileLoadedName : ""}
                     </div>
-                    {!file && !props.currentFileLoadedName && (
+                    {!file && !currentFileLoadedName && (
                         <Button onClick={handleOpenDialog} variant='contained'>
                             Browse file
                         </Button>
                     )}
-                    {(file || props.currentFileLoadedName) && (
+                    {(file || currentFileLoadedName) && (
                         <Button onClick={handleRemoveFile} variant='outlined' color='secondary'>
                             Remove
                         </Button>

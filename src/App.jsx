@@ -18,11 +18,14 @@ function App() {
     const [step, setStep] = useState(0);
     const [canProceed, setCanProceed] = useState(false);
     const [rotations, setRotations] = useState([]);
+    const [rotationsFileName, setRotationsFileName] = useState("");
     const [juniorRotations, setJuniorRotations] = useState([]);
     const [seniorRotations, setSeniorRotations] = useState([]);
     const [juniorAndSeniorRotations, setJuniorAndSeniorRotations] = useState([]);
     const [rotationCoordinators, setRotationCoordinators] = useState([]);
+    const [rotationCoordinatorsFileName, setRotationCoordinatorsFileName] = useState("");
     const [EPAs, setEPAs] = useState([]);
+    const [EPAsFileName, setEPAsFileName] = useState("");
 
     // Stepper Controls
     const changeActiveStep = (step) => {
@@ -30,6 +33,7 @@ function App() {
         if (step === 0 && rotations.length > 0) {
             setCanProceed(true);
         } else if (step === 0 && rotations.length === 0) {
+            console.log("cant proceed");
             setCanProceed(false);
         } else if (step === 1 && rotationCoordinators.length > 0) {
             setCanProceed(true);
@@ -81,8 +85,8 @@ function App() {
             const uniqueRotationIndex = uniqueRotations.findIndex(
                 (rot) => `${rot.Rotation}-${rot.Hospital}` === `${row.Rotation}-${row.Hospital}`
             );
-            if (row.Team !== "") {
-                row.Resident += ` (${row.Team})`;
+            if (row.Team !== "" && !row.Resident.includes(row.Team)) {
+                row.Resident = `${row.Resident} (${row.Team})`;
             }
             switch (row.PGY) {
                 case "PGY1":
@@ -149,6 +153,21 @@ function App() {
         setCanProceed(true);
     };
 
+    const reportRotationsFileName = (name) => {
+        setRotationsFileName(name);
+    };
+
+    const onRotationsDataRemoved = () => {
+        setRotations([]);
+        setRotationsFileName("");
+        setRotationCoordinators([]);
+        setRotationCoordinatorsFileName("");
+        setEPAs([]);
+        setEPAsFileName("");
+        changeActiveStep(0);
+        setCanProceed(false);
+    };
+
     const augmentRotationsWithRCData = (rotationsToAugment, rotCoordinators) => {
         const rots = rotationsToAugment.map((rot) => {
             const thisRotationsRCData = rotCoordinators.find(
@@ -178,6 +197,19 @@ function App() {
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedRCAugmentedRotations));
         // Move on to next step - uploading EPA Data
         setCanProceed(true);
+    };
+
+    const reportRotationCoordinatorsFileName = (name) => {
+        setRotationCoordinatorsFileName(name);
+    };
+
+    const onRotationCoordinatorsDataRemoved = () => {
+        setRotationCoordinators([]);
+        setRotationCoordinatorsFileName("");
+        setEPAs([]);
+        setEPAsFileName("");
+        changeActiveStep(1);
+        setCanProceed(false);
     };
 
     const augmentRotationsWithEPAData = (rotationsToAugment, EPAs) => {
@@ -221,14 +253,44 @@ function App() {
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedEPAAugmentedRotations));
     };
 
+    const reportEPAsFileName = (name) => {
+        setEPAsFileName(name);
+    };
+
+    const onEPAsDataRemoved = () => {
+        setEPAs([]);
+        setEPAsFileName("");
+        changeActiveStep(2);
+        setCanProceed(false);
+    };
+
     return (
         <PageColumn>
             <UploadStepper activeStep={step} changeActiveStep={changeActiveStep} canProceed={canProceed} />
-            {step === 0 && <RotationUploadInput onRotationsDataLoaded={onRotationsDataLoaded} />}
-            {step === 1 && (
-                <RotationCoordinatorUploadInput onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded} />
+            {step === 0 && (
+                <RotationUploadInput
+                    onRotationsDataLoaded={onRotationsDataLoaded}
+                    onRotationsDataRemoved={onRotationsDataRemoved}
+                    reportFileName={reportRotationsFileName}
+                    rotationsFileName={rotationsFileName}
+                />
             )}
-            {step === 2 && <EPAUploadInput onEPADataLoaded={onEPADataLoaded} />}
+            {step === 1 && (
+                <RotationCoordinatorUploadInput
+                    onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded}
+                    onRotationCoordinatorsDataRemoved={onRotationCoordinatorsDataRemoved}
+                    reportFileName={reportRotationCoordinatorsFileName}
+                    rotationCoordinatorsFileName={rotationCoordinatorsFileName}
+                />
+            )}
+            {step === 2 && (
+                <EPAUploadInput
+                    onEPADataLoaded={onEPADataLoaded}
+                    onEPAsDataRemoved={onEPAsDataRemoved}
+                    reportFileName={reportEPAsFileName}
+                    EPAsFileName={EPAsFileName}
+                />
+            )}
             {rotations.length > 0 && (
                 <>
                     <TableSection>
@@ -239,7 +301,7 @@ function App() {
                             color='primary'
                             style={{ paddingBottom: "2rem" }}
                         >
-                            All Rotations Uploaded
+                            All Rotations - By Resident
                         </Typography>
                         <AllRotationsDataGrid
                             rotationsData={rotations}
@@ -255,12 +317,13 @@ function App() {
                             color='primary'
                             style={{ paddingBottom: "2rem" }}
                         >
-                            Junior Rotations
+                            Grouped Rotations - <strong>Juniors</strong> by Block-Rotation-Site
                         </Typography>
                         <GroupedResidentsDataGrid
                             rotationsData={juniorRotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                             EPADataAvailable={EPAs.length > 0}
+                            groupType='Juniors'
                         />
                     </TableSection>
                     <TableSection>
@@ -271,12 +334,13 @@ function App() {
                             color='primary'
                             style={{ paddingBottom: "2rem" }}
                         >
-                            Senior Rotations
+                            Grouped Rotations - <strong>Seniors</strong> by Block-Rotation-Site
                         </Typography>
                         <GroupedResidentsDataGrid
                             rotationsData={seniorRotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                             EPADataAvailable={EPAs.length > 0}
+                            groupType='Seniors'
                         />
                     </TableSection>
                     <TableSection>
@@ -287,12 +351,13 @@ function App() {
                             color='primary'
                             style={{ paddingBottom: "2rem" }}
                         >
-                            Junior and Senior Rotations
+                            Grouped Rotations - <strong>Juniors & Seniors</strong> by Block-Rotation-Site
                         </Typography>
                         <GroupedResidentsDataGrid
                             rotationsData={juniorAndSeniorRotations}
                             rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                             EPADataAvailable={EPAs.length > 0}
+                            groupType='Juniors and Seniors'
                         />
                     </TableSection>
                 </>

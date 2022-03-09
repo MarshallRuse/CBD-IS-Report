@@ -5,6 +5,8 @@ import { CSVReader } from "react-papaparse";
 const rotationUploadButtonRef = createRef();
 
 export default function RotationCSVReader(props) {
+    const { reportFileName, currentFileLoadedName, onRemoveFile } = props;
+
     const handleOpenDialog = (e) => {
         // Note that the ref is set async, so it might be null at some point
         if (rotationUploadButtonRef.current) {
@@ -17,7 +19,6 @@ export default function RotationCSVReader(props) {
         if (rotationUploadButtonRef.current && rotationUploadButtonRef.current.inputFileRef.current.files.length > 0) {
             file = rotationUploadButtonRef.current.inputFileRef.current.files[0];
         }
-
         props.onFileLoad(data, file);
     };
 
@@ -30,11 +31,14 @@ export default function RotationCSVReader(props) {
         if (rotationUploadButtonRef.current) {
             rotationUploadButtonRef.current.removeFile();
         }
-        props.onRemoveFile();
+        onRemoveFile();
     };
 
     useEffect(() => {
-        const fileLoaded = rotationUploadButtonRef.current.inputFileRef.current.files.length > 0;
+        const fileLoaded = rotationUploadButtonRef.current.inputFileRef?.current?.files?.[0];
+        if (fileLoaded) {
+            reportFileName(fileLoaded.name);
+        }
     }, [rotationUploadButtonRef.current, rotationUploadButtonRef.current?.inputFileRef.current.files.length]);
 
     return (
@@ -70,6 +74,7 @@ export default function RotationCSVReader(props) {
                             borderStyle: "solid",
                             borderColor: "#ccc",
                             borderRadius: "4px",
+                            color: "#808080",
                             flex: 1,
                             height: 45,
                             lineHeight: 2.5,
@@ -78,14 +83,14 @@ export default function RotationCSVReader(props) {
                             paddingTop: 3,
                         }}
                     >
-                        {file ? file.name : props.currentFileLoadedName ? props.currentFileLoadedName : ""}
+                        {file ? file.name : currentFileLoadedName ? currentFileLoadedName : ""}
                     </div>
-                    {!file && !props.currentFileLoadedName && (
+                    {!file && !currentFileLoadedName && (
                         <Button onClick={handleOpenDialog} variant='contained'>
                             Browse file
                         </Button>
                     )}
-                    {(file || props.currentFileLoadedName) && (
+                    {(file || currentFileLoadedName) && (
                         <Button onClick={handleRemoveFile} variant='outlined' color='secondary'>
                             Remove
                         </Button>

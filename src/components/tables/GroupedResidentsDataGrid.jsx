@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Grid, Tooltip, tooltipClasses } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
 
 const WrapLineBreaks = styled("span")({
@@ -139,8 +139,7 @@ const columns = [
 ];
 
 export default function GroupedResidentsDataGrid(props) {
-    const { rotationsData, rotationCoordinatorDataAvailable = false, EPADataAvailable = false } = props;
-    console.log("rotationsData: ", rotationsData);
+    const { rotationsData, rotationCoordinatorDataAvailable = false, EPADataAvailable = false, groupType = "" } = props;
 
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({
         RotationCoordinator: false,
@@ -158,6 +157,25 @@ export default function GroupedResidentsDataGrid(props) {
         SeniorRotationCards: false,
     });
 
+    const CustomToolbar = () => {
+        const uniqueBlocks = rotationsData
+            .map((rot) => parseInt(rot.Block))
+            .filter((block, ind, self) => self.indexOf(block) === ind);
+        const blocksName =
+            uniqueBlocks.length > 1
+                ? `Blocks ${Math.min(...uniqueBlocks)}-${Math.max(...uniqueBlocks)}`
+                : `Block ${uniqueBlocks[0]}`;
+
+        return (
+            <GridToolbarContainer>
+                <GridToolbarExport
+                    csvOptions={{
+                        fileName: `${blocksName} Rotation Coordinator - ${groupType}`,
+                    }}
+                />
+            </GridToolbarContainer>
+        );
+    };
     useEffect(() => {
         setColumnVisibilityModel({
             RotationCoordinator: rotationCoordinatorDataAvailable,
@@ -205,6 +223,9 @@ export default function GroupedResidentsDataGrid(props) {
                         }}
                         columns={columns}
                         columnVisibilityModel={columnVisibilityModel}
+                        components={{
+                            Toolbar: CustomToolbar,
+                        }}
                         disableSelectionOnClick
                     />
                 </div>
