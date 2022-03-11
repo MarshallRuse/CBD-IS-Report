@@ -1,15 +1,7 @@
-import React, { useState } from "react";
-import { Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import RotationCoordinatorCSVReader from "./csv-readers/RotationCoordinatorCSVReader";
-
-const InputContainer = styled("div")({
-    width: "100%",
-});
-
-const InputLabel = styled(Typography)({
-    alignSelf: "flex-start",
-});
+import { InputContainer, InputLabel } from "../StyledComponents";
 
 export default function RotationCoordinatorUploadInput(props) {
     const {
@@ -18,6 +10,8 @@ export default function RotationCoordinatorUploadInput(props) {
         reportFileName,
         rotationCoordinatorsFileName,
     } = props;
+
+    const [infoPanelOpen, setInfoPanelOpen] = useState(false);
 
     const rotationCoordinators = [];
 
@@ -51,10 +45,10 @@ export default function RotationCoordinatorUploadInput(props) {
 
     return (
         <>
-            <InputLabel component='h2' variant='h4' align='left'>
-                Rotation Coordinators Data
-            </InputLabel>
             <InputContainer>
+                <InputLabel component='h2' variant='h4' align='left'>
+                    Rotation Coordinators Data
+                </InputLabel>
                 <RotationCoordinatorCSVReader
                     stepFunction={processRotationCoordinatorDataRow}
                     completeFunction={allRotationCoordinatorDataRowsProcessed}
@@ -64,6 +58,15 @@ export default function RotationCoordinatorUploadInput(props) {
                     currentFileLoadedName={rotationCoordinatorsFileName}
                 />
             </InputContainer>
+            <motion.section
+                key='Rotation-Coordinator-Info-Section'
+                animate={infoPanelOpen ? "open" : "collapsed"}
+                variants={{
+                    open: { opacity: 1, height: "auto" },
+                    collapsed: { opacity: 0, height: 0 },
+                }}
+                transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
+            ></motion.section>
         </>
     );
 }

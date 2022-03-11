@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Typography } from "@mui/material";
+import { Alert, Slide, Snackbar, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { motion, AnimatePresence } from "framer-motion";
 import { PageColumn } from "./components/StyledComponents";
 import UploadStepper from "./components/UploadStepper";
 import RotationUploadInput from "./components/upload-inputs/RotationUploadInput";
@@ -9,13 +10,48 @@ import EPAUploadInput from "./components/upload-inputs/EPAUploadInput";
 import AllRotationsDataGrid from "./components/tables/AllRotationsDataGrid";
 import GroupedResidentsDataGrid from "./components/tables/GroupedResidentsDataGrid";
 
+const Header = styled("header")({
+    alignItems: "center",
+    background:
+        "linear-gradient(270deg, #005194, rgba(0, 71, 138, 0.7) 20%, rgba(0, 65, 132, 0.7) 50%, #003374 85%, #005194)",
+    color: "#fff",
+    display: "flex",
+    justifyContent: "center",
+    padding: "2.5em",
+});
+
 const TableSection = styled("div")({
     marginTop: "2rem",
     width: "100%",
 });
 
+const variants = {
+    enter: (direction) => {
+        return {
+            x: direction > 0 ? 1000 : -1000,
+            opacity: 0,
+        };
+    },
+    center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1,
+    },
+    exit: (direction) => {
+        return {
+            zIndex: 0,
+            x: direction < 0 ? 1000 : -1000,
+            opacity: 0,
+        };
+    },
+};
+
+const SnackbarTransition = (props) => <Slide {...props} direction='up ' />;
+
 function App() {
-    const [step, setStep] = useState(0);
+    const [[step, direction], setStep] = useState([0, 0]);
+    const [progressUpdateOpen, setProgressUpdateOpen] = useState(false);
+    const [progressUpdateMessage, setProgressUpdateMessage] = useState("");
     const [canProceed, setCanProceed] = useState(false);
     const [rotations, setRotations] = useState([]);
     const [rotationsFileName, setRotationsFileName] = useState("");
@@ -28,22 +64,28 @@ function App() {
     const [EPAsFileName, setEPAsFileName] = useState("");
 
     // Stepper Controls
-    const changeActiveStep = (step) => {
-        setStep(step);
-        if (step === 0 && rotations.length > 0) {
+    const changeActiveStep = (direction) => {
+        const newStep = step + direction;
+        setStep([step + direction, direction]);
+        if (newStep === 0 && rotations.length > 0) {
             setCanProceed(true);
-        } else if (step === 0 && rotations.length === 0) {
-            console.log("cant proceed");
+        } else if (newStep === 0 && rotations.length === 0) {
             setCanProceed(false);
-        } else if (step === 1 && rotationCoordinators.length > 0) {
+        } else if (newStep === 1 && rotationCoordinators.length > 0) {
             setCanProceed(true);
-        } else if (step === 1 && rotationCoordinators.length === 0) {
+        } else if (newStep === 1 && rotationCoordinators.length === 0) {
             setCanProceed(false);
-        } else if (step === 2 && EPAs.length > 0) {
+        } else if (newStep === 2 && EPAs.length > 0) {
             setCanProceed(true);
-        } else if (step === 2 && EPAs.length === 0) {
+        } else if (newStep === 2 && EPAs.length === 0) {
             setCanProceed(false);
         }
+    };
+
+    // Progress Update Control
+    const handleProgressUpdateClose = () => {
+        setProgressUpdateOpen(false);
+        setProgressUpdateMessage("");
     };
 
     // Rotation formatting functions
@@ -149,6 +191,9 @@ function App() {
         setJuniorRotations(filterOnlyJuniors(uniqueRotations));
         setSeniorRotations(filterOnlySeniors(uniqueRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(uniqueRotations));
+        // Alert User
+        setProgressUpdateMessage("Rotations uploaded!");
+        setProgressUpdateOpen(true);
         // Move on to next step - uploading Rotation Coordinator Data
         setCanProceed(true);
     };
@@ -164,7 +209,6 @@ function App() {
         setRotationCoordinatorsFileName("");
         setEPAs([]);
         setEPAsFileName("");
-        changeActiveStep(0);
         setCanProceed(false);
     };
 
@@ -195,6 +239,10 @@ function App() {
         setJuniorRotations(filterOnlyJuniors(groupedRCAugmentedRotations));
         setSeniorRotations(filterOnlySeniors(groupedRCAugmentedRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedRCAugmentedRotations));
+
+        // Alert User
+        setProgressUpdateMessage("Rotation Coordinators uploaded!");
+        setProgressUpdateOpen(true);
         // Move on to next step - uploading EPA Data
         setCanProceed(true);
     };
@@ -208,7 +256,6 @@ function App() {
         setRotationCoordinatorsFileName("");
         setEPAs([]);
         setEPAsFileName("");
-        changeActiveStep(1);
         setCanProceed(false);
     };
 
@@ -247,10 +294,15 @@ function App() {
         setRotations(EPAAugmentedRotations);
 
         const groupedEPAAugmentedRotations = groupByUniqueRotations(EPAAugmentedRotations);
-        console.log("groupedEPAAugmentedROtations: ", groupedEPAAugmentedRotations);
         setJuniorRotations(filterOnlyJuniors(groupedEPAAugmentedRotations));
         setSeniorRotations(filterOnlySeniors(groupedEPAAugmentedRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedEPAAugmentedRotations));
+
+        // Alert User
+        setProgressUpdateMessage("EPA Data uploaded!");
+        setProgressUpdateOpen(true);
+
+        setCanProceed(true);
     };
 
     const reportEPAsFileName = (name) => {
@@ -260,109 +312,153 @@ function App() {
     const onEPAsDataRemoved = () => {
         setEPAs([]);
         setEPAsFileName("");
-        changeActiveStep(2);
         setCanProceed(false);
     };
 
     return (
-        <PageColumn>
-            <UploadStepper activeStep={step} changeActiveStep={changeActiveStep} canProceed={canProceed} />
-            {step === 0 && (
-                <RotationUploadInput
-                    onRotationsDataLoaded={onRotationsDataLoaded}
-                    onRotationsDataRemoved={onRotationsDataRemoved}
-                    reportFileName={reportRotationsFileName}
-                    rotationsFileName={rotationsFileName}
-                />
-            )}
-            {step === 1 && (
-                <RotationCoordinatorUploadInput
-                    onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded}
-                    onRotationCoordinatorsDataRemoved={onRotationCoordinatorsDataRemoved}
-                    reportFileName={reportRotationCoordinatorsFileName}
-                    rotationCoordinatorsFileName={rotationCoordinatorsFileName}
-                />
-            )}
-            {step === 2 && (
-                <EPAUploadInput
-                    onEPADataLoaded={onEPADataLoaded}
-                    onEPAsDataRemoved={onEPAsDataRemoved}
-                    reportFileName={reportEPAsFileName}
-                    EPAsFileName={EPAsFileName}
-                />
-            )}
-            {rotations.length > 0 && (
-                <>
-                    <TableSection>
-                        <Typography
-                            variant='h4'
-                            component='h2'
-                            align='center'
-                            color='primary'
-                            style={{ paddingBottom: "2rem" }}
+        <>
+            <Header>
+                <Typography variant='h1'>Rotation Coordinator Report Formatter</Typography>
+            </Header>
+            <PageColumn>
+                <UploadStepper activeStep={step} changeActiveStep={changeActiveStep} canProceed={canProceed} />
+                <AnimatePresence initial={false} custom={direction} exitBeforeEnter>
+                    <motion.div
+                        key={step}
+                        custom={direction}
+                        variants={variants}
+                        initial='enter'
+                        animate='center'
+                        exit='exit'
+                        transition={{
+                            x: { type: "spring", stiffness: 300, damping: 30 },
+                            opacity: { duration: 0.2 },
+                        }}
+                        style={{ width: "100%" }}
+                    >
+                        {step === 0 && (
+                            <RotationUploadInput
+                                onRotationsDataLoaded={onRotationsDataLoaded}
+                                onRotationsDataRemoved={onRotationsDataRemoved}
+                                reportFileName={reportRotationsFileName}
+                                rotationsFileName={rotationsFileName}
+                            />
+                        )}
+                        {step === 1 && (
+                            <RotationCoordinatorUploadInput
+                                onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded}
+                                onRotationCoordinatorsDataRemoved={onRotationCoordinatorsDataRemoved}
+                                reportFileName={reportRotationCoordinatorsFileName}
+                                rotationCoordinatorsFileName={rotationCoordinatorsFileName}
+                            />
+                        )}
+                        {step === 2 && (
+                            <EPAUploadInput
+                                onEPADataLoaded={onEPADataLoaded}
+                                onEPAsDataRemoved={onEPAsDataRemoved}
+                                reportFileName={reportEPAsFileName}
+                                EPAsFileName={EPAsFileName}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+                <AnimatePresence>
+                    {rotations.length > 0 && (
+                        <motion.section
+                            key='tables'
+                            initial='collapsed'
+                            animate='open'
+                            exit='collapsed'
+                            variants={{
+                                open: { opacity: 1, height: "auto" },
+                                collapsed: { opacity: 0, height: 0 },
+                            }}
+                            transition={{ duration: 0.5, ease: "easeInOut" }}
+                            style={{ display: "flex", flexDirection: "column", gap: "3rem" }}
                         >
-                            All Rotations - By Resident
-                        </Typography>
-                        <AllRotationsDataGrid
-                            rotationsData={rotations}
-                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
-                            EPADataAvailable={EPAs.length > 0}
-                        />
-                    </TableSection>
-                    <TableSection>
-                        <Typography
-                            variant='h4'
-                            component='h2'
-                            align='center'
-                            color='primary'
-                            style={{ paddingBottom: "2rem" }}
-                        >
-                            Grouped Rotations - <strong>Juniors</strong> by Block-Rotation-Site
-                        </Typography>
-                        <GroupedResidentsDataGrid
-                            rotationsData={juniorRotations}
-                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
-                            EPADataAvailable={EPAs.length > 0}
-                            groupType='Juniors'
-                        />
-                    </TableSection>
-                    <TableSection>
-                        <Typography
-                            variant='h4'
-                            component='h2'
-                            align='center'
-                            color='primary'
-                            style={{ paddingBottom: "2rem" }}
-                        >
-                            Grouped Rotations - <strong>Seniors</strong> by Block-Rotation-Site
-                        </Typography>
-                        <GroupedResidentsDataGrid
-                            rotationsData={seniorRotations}
-                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
-                            EPADataAvailable={EPAs.length > 0}
-                            groupType='Seniors'
-                        />
-                    </TableSection>
-                    <TableSection>
-                        <Typography
-                            variant='h4'
-                            component='h2'
-                            align='center'
-                            color='primary'
-                            style={{ paddingBottom: "2rem" }}
-                        >
-                            Grouped Rotations - <strong>Juniors & Seniors</strong> by Block-Rotation-Site
-                        </Typography>
-                        <GroupedResidentsDataGrid
-                            rotationsData={juniorAndSeniorRotations}
-                            rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
-                            EPADataAvailable={EPAs.length > 0}
-                            groupType='Juniors and Seniors'
-                        />
-                    </TableSection>
-                </>
-            )}
-        </PageColumn>
+                            <TableSection>
+                                <Typography
+                                    variant='h4'
+                                    component='h2'
+                                    align='center'
+                                    color='primary'
+                                    style={{ paddingBottom: "2rem" }}
+                                >
+                                    All Rotations - By Resident
+                                </Typography>
+                                <AllRotationsDataGrid
+                                    rotationsData={rotations}
+                                    rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                                    EPADataAvailable={EPAs.length > 0}
+                                />
+                            </TableSection>
+                            <TableSection>
+                                <Typography
+                                    variant='h4'
+                                    component='h2'
+                                    align='center'
+                                    color='primary'
+                                    style={{ paddingBottom: "2rem" }}
+                                >
+                                    Grouped Rotations - <strong>Juniors</strong> by Block-Rotation-Site
+                                </Typography>
+                                <GroupedResidentsDataGrid
+                                    rotationsData={juniorRotations}
+                                    rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                                    EPADataAvailable={EPAs.length > 0}
+                                    groupType='Juniors'
+                                />
+                            </TableSection>
+                            <TableSection>
+                                <Typography
+                                    variant='h4'
+                                    component='h2'
+                                    align='center'
+                                    color='primary'
+                                    style={{ paddingBottom: "2rem" }}
+                                >
+                                    Grouped Rotations - <strong>Seniors</strong> by Block-Rotation-Site
+                                </Typography>
+                                <GroupedResidentsDataGrid
+                                    rotationsData={seniorRotations}
+                                    rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                                    EPADataAvailable={EPAs.length > 0}
+                                    groupType='Seniors'
+                                />
+                            </TableSection>
+                            <TableSection>
+                                <Typography
+                                    variant='h4'
+                                    component='h2'
+                                    align='center'
+                                    color='primary'
+                                    style={{ paddingBottom: "2rem" }}
+                                >
+                                    Grouped Rotations - <strong>Juniors & Seniors</strong> by Block-Rotation-Site
+                                </Typography>
+                                <GroupedResidentsDataGrid
+                                    rotationsData={juniorAndSeniorRotations}
+                                    rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
+                                    EPADataAvailable={EPAs.length > 0}
+                                    groupType='Juniors and Seniors'
+                                />
+                            </TableSection>
+                        </motion.section>
+                    )}
+                </AnimatePresence>
+            </PageColumn>
+            <Snackbar
+                open={progressUpdateOpen}
+                autoHideDuration={4000}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                TransitionComponent={SnackbarTransition}
+                onClose={handleProgressUpdateClose}
+            >
+                <Alert onClose={handleProgressUpdateClose} severity='success' sx={{ width: "100%" }}>
+                    {progressUpdateMessage}
+                </Alert>
+            </Snackbar>
+        </>
     );
 }
 

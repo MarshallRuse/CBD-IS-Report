@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Grid, Tooltip } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 
 const defaultMinColWidth = 200;
 const columns = [
@@ -27,19 +27,79 @@ const columns = [
     { field: "PGY", headerName: "PGY", minWidth: 75, flex: 1 },
     { field: "TraineeProgram", headerName: "Trainee Program", minWidth: defaultMinColWidth, flex: 1 },
     { field: "Team", headerName: "Team", minWidth: 100, flex: 1 },
-    { field: "RotationCoordinator", headerName: "Rotation Coordinator", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "RCFirstName", headerName: "RC First Name", minWidth: 120, flex: 1 },
-    { field: "RCEmail", headerName: "RC Email", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "Assistant", headerName: "Assistant", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "AssistantEmail", headerName: "Assistant Email", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "JuniorPriority", headerName: "Junior Priority", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "JuniorDoWhenYouCan", headerName: "Junior Do When You Can", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "JuniorOptional", headerName: "Senior Optional", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "SeniorPriority", headerName: "Senior Priority", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "SeniorDoWhenYouCan", headerName: "Senior Do When You Can", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "SeniorOptional", headerName: "Senior Optional", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "JuniorRotationCards", headerName: "Junior Rotation Cards", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "SeniorRotationCards", headerName: "Senior Rotation Cards", minWidth: defaultMinColWidth, flex: 1 },
+    {
+        field: "RotationCoordinator",
+        headerName: "Rotation Coordinator",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "rc-data",
+    },
+    { field: "RCFirstName", headerName: "RC First Name", minWidth: 120, flex: 1, cellClassName: "rc-data" },
+    { field: "RCEmail", headerName: "RC Email", minWidth: defaultMinColWidth, flex: 1, cellClassName: "rc-data" },
+    { field: "Assistant", headerName: "Assistant", minWidth: defaultMinColWidth, flex: 1, cellClassName: "rc-data" },
+    {
+        field: "AssistantEmail",
+        headerName: "Assistant Email",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "rc-data",
+    },
+    {
+        field: "JuniorPriority",
+        headerName: "Junior Priority",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "JuniorDoWhenYouCan",
+        headerName: "Junior Do When You Can",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "JuniorOptional",
+        headerName: "Senior Optional",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "SeniorPriority",
+        headerName: "Senior Priority",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "SeniorDoWhenYouCan",
+        headerName: "Senior Do When You Can",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "SeniorOptional",
+        headerName: "Senior Optional",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "JuniorRotationCards",
+        headerName: "Junior Rotation Cards",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
+    {
+        field: "SeniorRotationCards",
+        headerName: "Senior Rotation Cards",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "epa-data",
+    },
 ];
 
 export default function AllRotationsDataGrid(props) {
@@ -60,6 +120,26 @@ export default function AllRotationsDataGrid(props) {
         JuniorRotationCards: false,
         SeniorRotationCards: false,
     });
+
+    const CustomToolbar = () => {
+        const uniqueBlocks = rotationsData
+            .map((rot) => parseInt(rot.Block))
+            .filter((block, ind, self) => self.indexOf(block) === ind);
+        const blocksName =
+            uniqueBlocks.length > 1
+                ? `Blocks ${Math.min(...uniqueBlocks)}-${Math.max(...uniqueBlocks)}`
+                : `Block ${uniqueBlocks[0]}`;
+
+        return (
+            <GridToolbarContainer sx={{ justifyContent: "flex-end", padding: "0.5em" }}>
+                <GridToolbarExport
+                    csvOptions={{
+                        fileName: `${blocksName} Rotation Coordinator - All Residents`,
+                    }}
+                />
+            </GridToolbarContainer>
+        );
+    };
 
     useEffect(() => {
         setColumnVisibilityModel({
@@ -87,6 +167,17 @@ export default function AllRotationsDataGrid(props) {
                         rows={rotationsData}
                         columns={columns}
                         columnVisibilityModel={columnVisibilityModel}
+                        components={{
+                            Toolbar: CustomToolbar,
+                        }}
+                        sx={{
+                            "& .rc-data": {
+                                backgroundColor: "RCData.primary",
+                            },
+                            "& .epa-data": {
+                                backgroundColor: "EPAData.primary",
+                            },
+                        }}
                         disableSelectionOnClick
                     />
                 </div>

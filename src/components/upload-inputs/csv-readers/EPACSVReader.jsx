@@ -1,11 +1,13 @@
 import React, { useState, useEffect, createRef } from "react";
 import { Button } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { CSVReader } from "react-papaparse";
 
 const EPAUploadButtonRef = createRef();
 
 export default function EPACSVReader(props) {
     const { reportFileName, currentFileLoadedName, onRemoveFile } = props;
+    const theme = useTheme();
 
     const handleOpenDialog = (e) => {
         // Note that the ref is set async, so it might be null at some point
@@ -71,6 +73,7 @@ export default function EPACSVReader(props) {
                 >
                     <div
                         style={{
+                            backgroundColor: theme.palette.EPAData.primary,
                             borderWidth: 1,
                             borderStyle: "solid",
                             borderColor: "#ccc",

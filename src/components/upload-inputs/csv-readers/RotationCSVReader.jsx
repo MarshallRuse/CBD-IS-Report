@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createRef } from "react";
-import { Button } from "@mui/material";
+import { Button, CircularProgress } from "@mui/material";
 import { CSVReader } from "react-papaparse";
 
 const rotationUploadButtonRef = createRef();
@@ -31,6 +31,7 @@ export default function RotationCSVReader(props) {
         if (rotationUploadButtonRef.current) {
             rotationUploadButtonRef.current.removeFile();
         }
+        console.log("called");
         onRemoveFile();
     };
 
@@ -52,12 +53,9 @@ export default function RotationCSVReader(props) {
             config={{
                 skipEmptyLines: true,
                 header: true,
-                //worker: true,
+                worker: true,
                 step: props.stepFunction,
                 complete: props.completeFunction,
-                beforeFirstChunk: function () {
-                    console.log("FIRST!");
-                },
             }}
         >
             {({ file }) => (
@@ -91,8 +89,13 @@ export default function RotationCSVReader(props) {
                         </Button>
                     )}
                     {(file || currentFileLoadedName) && (
-                        <Button onClick={handleRemoveFile} variant='outlined' color='secondary'>
-                            Remove
+                        <Button
+                            onClick={handleRemoveFile}
+                            variant='outlined'
+                            color='secondary'
+                            sx={{ minWidth: "7em" }}
+                        >
+                            {!currentFileLoadedName ? <CircularProgress size={30} /> : "Remove"}
                         </Button>
                     )}
                 </aside>

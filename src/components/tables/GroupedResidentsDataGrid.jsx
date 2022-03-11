@@ -75,17 +75,30 @@ const columns = [
         flex: 1,
         renderCell: formatAsWrappingCell,
     },
-    { field: "RotationCoordinator", headerName: "Rotation Coordinator", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "RCFirstName", headerName: "RC First Name", minWidth: 120, flex: 1 },
-    { field: "RCEmail", headerName: "RC Email", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "Assistant", headerName: "Assistant", minWidth: defaultMinColWidth, flex: 1 },
-    { field: "AssistantEmail", headerName: "Assistant Email", minWidth: defaultMinColWidth, flex: 1 },
+    {
+        field: "RotationCoordinator",
+        headerName: "Rotation Coordinator",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "rc-data",
+    },
+    { field: "RCFirstName", headerName: "RC First Name", minWidth: 120, flex: 1, cellClassName: "rc-data" },
+    { field: "RCEmail", headerName: "RC Email", minWidth: defaultMinColWidth, flex: 1, cellClassName: "rc-data" },
+    { field: "Assistant", headerName: "Assistant", minWidth: defaultMinColWidth, flex: 1, cellClassName: "rc-data" },
+    {
+        field: "AssistantEmail",
+        headerName: "Assistant Email",
+        minWidth: defaultMinColWidth,
+        flex: 1,
+        cellClassName: "rc-data",
+    },
     {
         field: "JuniorPriority",
         headerName: "Junior Priority",
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "JuniorDoWhenYouCan",
@@ -93,6 +106,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "JuniorOptional",
@@ -100,6 +114,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "SeniorPriority",
@@ -107,6 +122,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "SeniorDoWhenYouCan",
@@ -114,6 +130,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "SeniorOptional",
@@ -121,6 +138,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "JuniorRotationCards",
@@ -128,6 +146,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
     {
         field: "SeniorRotationCards",
@@ -135,6 +154,7 @@ const columns = [
         minWidth: defaultMinColWidth,
         flex: 1,
         renderCell: formatAsWrappingCell,
+        cellClassName: "epa-data",
     },
 ];
 
@@ -167,7 +187,7 @@ export default function GroupedResidentsDataGrid(props) {
                 : `Block ${uniqueBlocks[0]}`;
 
         return (
-            <GridToolbarContainer>
+            <GridToolbarContainer sx={{ justifyContent: "flex-end", padding: "0.5em" }}>
                 <GridToolbarExport
                     csvOptions={{
                         fileName: `${blocksName} Rotation Coordinator - ${groupType}`,
@@ -225,6 +245,14 @@ export default function GroupedResidentsDataGrid(props) {
                         columnVisibilityModel={columnVisibilityModel}
                         components={{
                             Toolbar: CustomToolbar,
+                        }}
+                        sx={{
+                            "& .rc-data": {
+                                backgroundColor: "RCData.primary",
+                            },
+                            "& .epa-data": {
+                                backgroundColor: "EPAData.primary",
+                            },
                         }}
                         disableSelectionOnClick
                     />

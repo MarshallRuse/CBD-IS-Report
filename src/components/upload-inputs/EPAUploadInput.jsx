@@ -1,15 +1,5 @@
-import React, { useState } from "react";
-import { Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
 import EPACSVReader from "./csv-readers/EPACSVReader";
-
-const InputContainer = styled("div")({
-    width: "100%",
-});
-
-const InputLabel = styled(Typography)({
-    alignSelf: "flex-start",
-});
+import { InputContainer, InputLabel } from "../StyledComponents";
 
 export default function EPAUploadInput(props) {
     const { onEPADataLoaded, onEPAsDataRemoved, reportFileName, EPAsFileName } = props;
@@ -44,20 +34,19 @@ export default function EPAUploadInput(props) {
     };
 
     return (
-        <>
+        <InputContainer>
             <InputLabel component='h2' variant='h4' align='left'>
                 EPA Data
             </InputLabel>
-            <InputContainer>
-                <EPACSVReader
-                    stepFunction={processEPADataRow}
-                    completeFunction={allEPADataRowsProcessed}
-                    onError={handleOnError}
-                    onRemoveFile={handleOnRemoveEPADataFile}
-                    reportFileName={reportFileName}
-                    currentFileLoadedName={EPAsFileName}
-                />
-            </InputContainer>
-        </>
+
+            <EPACSVReader
+                stepFunction={processEPADataRow}
+                completeFunction={allEPADataRowsProcessed}
+                onError={handleOnError}
+                onRemoveFile={handleOnRemoveEPADataFile}
+                reportFileName={reportFileName}
+                currentFileLoadedName={EPAsFileName}
+            />
+        </InputContainer>
     );
 }

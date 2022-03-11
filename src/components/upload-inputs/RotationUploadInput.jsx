@@ -1,20 +1,13 @@
-import React, { useState } from "react";
-import { Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { useState } from "react";
+import { Info } from "@mui/icons-material";
+import { motion } from "framer-motion";
 import RotationCSVReader from "./csv-readers/RotationCSVReader";
-
-const InputContainer = styled("div")({
-    width: "100%",
-});
-
-const InputLabel = styled(Typography)({
-    alignSelf: "flex-start",
-});
+import { InputContainer, InputLabel } from "../StyledComponents";
+import { IconButton } from "@mui/material";
 
 export default function RotationUploadInput(props) {
     const { onRotationsDataLoaded, onRotationsDataRemoved, reportFileName, rotationsFileName } = props;
-
-    const [rotationDataFileName, setRotationDataFileName] = useState(undefined);
+    const [infoPanelOpen, setInfoPanelOpen] = useState(false);
 
     const rotations = [];
 
@@ -48,16 +41,18 @@ export default function RotationUploadInput(props) {
     };
 
     const handleOnRemoveRotationDataFile = (data) => {
-        setRotationDataFileName(undefined);
         onRotationsDataRemoved();
     };
 
     return (
         <>
-            <InputLabel component='h2' variant='h4' align='left'>
-                Rotations Data
-            </InputLabel>
             <InputContainer>
+                <InputLabel component='h2' variant='h4' align='left' color='textPrimary'>
+                    Rotations Data
+                    <IconButton size='large' onClick={() => setInfoPanelOpen(!infoPanelOpen)}>
+                        <Info color='primary' />
+                    </IconButton>
+                </InputLabel>
                 <RotationCSVReader
                     stepFunction={processRotationDataRow}
                     completeFunction={allRotationDataRowsProcessed}
@@ -67,6 +62,19 @@ export default function RotationUploadInput(props) {
                     currentFileLoadedName={rotationsFileName}
                 />
             </InputContainer>
+            <motion.section
+                key='Rotation-Coordinator-Info-Section'
+                animate={infoPanelOpen ? "open" : "collapsed"}
+                variants={{
+                    open: { opacity: 1, height: "auto" },
+                    collapsed: { opacity: 0, height: 0 },
+                }}
+                transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
+            >
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Laborum incidunt ducimus ipsum rerum recusandae
+                non aliquid inventore delectus odio odit, pariatur soluta hic reprehenderit numquam nostrum, repellendus
+                iste amet perspiciatis!
+            </motion.section>
         </>
     );
 }
