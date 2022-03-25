@@ -1,14 +1,20 @@
-import { useState } from "react";
-import { Alert, Slide, Snackbar, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { useState, useRef } from "react";
+import { Typography } from "@mui/material";
+import { styled, useTheme } from "@mui/material/styles";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageColumn } from "./components/StyledComponents";
 import UploadStepper from "./components/UploadStepper";
-import RotationUploadInput from "./components/upload-inputs/RotationUploadInput";
-import RotationCoordinatorUploadInput from "./components/upload-inputs/RotationCoordinatorUploadInput";
-import EPAUploadInput from "./components/upload-inputs/EPAUploadInput";
+import UploadInput from "./components/upload-inputs/UploadInput";
 import AllRotationsDataGrid from "./components/tables/AllRotationsDataGrid";
 import GroupedResidentsDataGrid from "./components/tables/GroupedResidentsDataGrid";
+import {
+    rotationHeaderValues,
+    rotationExampleBodyValues,
+    rotationCoordinatorHeaderValues,
+    rotationCoordinatorExampleBodyValues,
+    EPAsHeaderValues,
+    EPAsExampleBodyValues,
+} from "./uploadValueMap.js";
 
 const Header = styled("header")({
     alignItems: "center",
@@ -46,12 +52,15 @@ const variants = {
     },
 };
 
-const SnackbarTransition = (props) => <Slide {...props} direction='up ' />;
-
 function App() {
+    // Upload button refs
+    const rotationsUploadButtonRef = useRef(null);
+    const rotationCoordinatorsUploadButtonRef = useRef(null);
+    const EPAsUploadButtonRef = useRef(null);
+
+    const theme = useTheme();
+
     const [[step, direction], setStep] = useState([0, 0]);
-    const [progressUpdateOpen, setProgressUpdateOpen] = useState(false);
-    const [progressUpdateMessage, setProgressUpdateMessage] = useState("");
     const [canProceed, setCanProceed] = useState(false);
     const [rotations, setRotations] = useState([]);
     const [rotationsFileName, setRotationsFileName] = useState("");
@@ -80,12 +89,6 @@ function App() {
         } else if (newStep === 2 && EPAs.length === 0) {
             setCanProceed(false);
         }
-    };
-
-    // Progress Update Control
-    const handleProgressUpdateClose = () => {
-        setProgressUpdateOpen(false);
-        setProgressUpdateMessage("");
     };
 
     // Rotation formatting functions
@@ -127,7 +130,7 @@ function App() {
             const uniqueRotationIndex = uniqueRotations.findIndex(
                 (rot) => `${rot.Rotation}-${rot.Hospital}` === `${row.Rotation}-${row.Hospital}`
             );
-            if (row.Team !== "" && !row.Resident.includes(row.Team)) {
+            if (row.Team !== "" && !row.Resident?.includes(row.Team)) {
                 row.Resident = `${row.Resident} (${row.Team})`;
             }
             switch (row.PGY) {
@@ -185,17 +188,16 @@ function App() {
     };
 
     // Rotation Upload handler
-    const onRotationsDataLoaded = (data) => {
+    const onRotationsDataLoaded = (data, missingHeaders = []) => {
         setRotations(data);
         const uniqueRotations = groupByUniqueRotations(data);
         setJuniorRotations(filterOnlyJuniors(uniqueRotations));
         setSeniorRotations(filterOnlySeniors(uniqueRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(uniqueRotations));
-        // Alert User
-        setProgressUpdateMessage("Rotations uploaded!");
-        setProgressUpdateOpen(true);
         // Move on to next step - uploading Rotation Coordinator Data
-        setCanProceed(true);
+        if (missingHeaders.length === 0) {
+            setCanProceed(true);
+        }
     };
 
     const reportRotationsFileName = (name) => {
@@ -239,10 +241,6 @@ function App() {
         setJuniorRotations(filterOnlyJuniors(groupedRCAugmentedRotations));
         setSeniorRotations(filterOnlySeniors(groupedRCAugmentedRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedRCAugmentedRotations));
-
-        // Alert User
-        setProgressUpdateMessage("Rotation Coordinators uploaded!");
-        setProgressUpdateOpen(true);
         // Move on to next step - uploading EPA Data
         setCanProceed(true);
     };
@@ -261,7 +259,10 @@ function App() {
 
     const augmentRotationsWithEPAData = (rotationsToAugment, EPAs) => {
         const rots = rotationsToAugment.map((rot) => {
-            const juniorStage = rot.Block > 4 ? "FOD" : "TTD";
+            let juniorStage = rot.Block > 4 ? "FOD" : "TTD";
+            if (juniorStage === "FOD" && rot.Rotation === "GIM - CTU - Junior Experience") {
+                juniorStage += rot.Block > 8 ? " (Late)" : " (Early)";
+            }
             const seniorStage = "COD";
 
             const thisRotationsJuniorEPAData = EPAs.find(
@@ -298,10 +299,6 @@ function App() {
         setSeniorRotations(filterOnlySeniors(groupedEPAAugmentedRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedEPAAugmentedRotations));
 
-        // Alert User
-        setProgressUpdateMessage("EPA Data uploaded!");
-        setProgressUpdateOpen(true);
-
         setCanProceed(true);
     };
 
@@ -315,13 +312,30 @@ function App() {
         setCanProceed(false);
     };
 
+    const resetUploads = () => {
+        setRotations([]);
+        setRotationsFileName("");
+        setRotationCoordinators([]);
+        setRotationCoordinatorsFileName("");
+        setEPAs([]);
+        setEPAsFileName("");
+        setCanProceed(false);
+        setStep([0, -1]);
+    };
+
     return (
         <>
             <Header>
                 <Typography variant='h1'>Rotation Coordinator Report Formatter</Typography>
             </Header>
             <PageColumn>
-                <UploadStepper activeStep={step} changeActiveStep={changeActiveStep} canProceed={canProceed} />
+                <UploadStepper
+                    activeStep={step}
+                    changeActiveStep={changeActiveStep}
+                    canProceed={canProceed}
+                    canReset={rotations.length > 0}
+                    resetUploads={resetUploads}
+                />
                 <AnimatePresence initial={false} custom={direction} exitBeforeEnter>
                     <motion.div
                         key={step}
@@ -337,27 +351,41 @@ function App() {
                         style={{ width: "100%" }}
                     >
                         {step === 0 && (
-                            <RotationUploadInput
-                                onRotationsDataLoaded={onRotationsDataLoaded}
-                                onRotationsDataRemoved={onRotationsDataRemoved}
+                            <UploadInput
+                                ref={rotationsUploadButtonRef}
+                                onDataLoaded={onRotationsDataLoaded}
+                                onDataRemoved={onRotationsDataRemoved}
                                 reportFileName={reportRotationsFileName}
-                                rotationsFileName={rotationsFileName}
+                                fileName={rotationsFileName}
+                                uploadTitle={"Rotations"}
+                                headerValues={rotationHeaderValues}
+                                exampleBodyValues={rotationExampleBodyValues}
                             />
                         )}
                         {step === 1 && (
-                            <RotationCoordinatorUploadInput
-                                onRotationCoordinatorDataLoaded={onRotationCoordinatorDataLoaded}
-                                onRotationCoordinatorsDataRemoved={onRotationCoordinatorsDataRemoved}
+                            <UploadInput
+                                ref={rotationCoordinatorsUploadButtonRef}
+                                onDataLoaded={onRotationCoordinatorDataLoaded}
+                                onDataRemoved={onRotationCoordinatorsDataRemoved}
                                 reportFileName={reportRotationCoordinatorsFileName}
-                                rotationCoordinatorsFileName={rotationCoordinatorsFileName}
+                                fileName={rotationCoordinatorsFileName}
+                                uploadTitle={"Rotation Coordinators"}
+                                headerValues={rotationCoordinatorHeaderValues}
+                                exampleBodyValues={rotationCoordinatorExampleBodyValues}
+                                inputBackgroundColor={theme.palette.RCData.primary}
                             />
                         )}
                         {step === 2 && (
-                            <EPAUploadInput
-                                onEPADataLoaded={onEPADataLoaded}
-                                onEPAsDataRemoved={onEPAsDataRemoved}
+                            <UploadInput
+                                ref={EPAsUploadButtonRef}
+                                onDataLoaded={onEPADataLoaded}
+                                onDataRemoved={onEPAsDataRemoved}
                                 reportFileName={reportEPAsFileName}
-                                EPAsFileName={EPAsFileName}
+                                fileName={EPAsFileName}
+                                uploadTitle={"EPAs"}
+                                headerValues={EPAsHeaderValues}
+                                exampleBodyValues={EPAsExampleBodyValues}
+                                inputBackgroundColor={theme.palette.EPAData.primary}
                             />
                         )}
                     </motion.div>
@@ -447,17 +475,6 @@ function App() {
                     )}
                 </AnimatePresence>
             </PageColumn>
-            <Snackbar
-                open={progressUpdateOpen}
-                autoHideDuration={4000}
-                anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                TransitionComponent={SnackbarTransition}
-                onClose={handleProgressUpdateClose}
-            >
-                <Alert onClose={handleProgressUpdateClose} severity='success' sx={{ width: "100%" }}>
-                    {progressUpdateMessage}
-                </Alert>
-            </Snackbar>
         </>
     );
 }

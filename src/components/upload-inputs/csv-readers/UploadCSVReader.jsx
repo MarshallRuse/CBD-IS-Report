@@ -1,28 +1,23 @@
-import React, { useState, useEffect, createRef } from "react";
-import { Button } from "@mui/material";
+import React, { useEffect, forwardRef } from "react";
+import { Button, CircularProgress } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { CSVReader } from "react-papaparse";
 
-const rotationCoordinatorUploadButtonRef = createRef();
-
-export default function RotationCoordinatorCSVReader(props) {
-    const { reportFileName, currentFileLoadedName, onRemoveFile } = props;
+const UploadCSVReader = forwardRef((props, ref) => {
+    const { reportFileName, currentFileLoadedName, onRemoveFile, inputBackgroundColor } = props;
     const theme = useTheme();
 
     const handleOpenDialog = (e) => {
         // Note that the ref is set async, so it might be null at some point
-        if (rotationCoordinatorUploadButtonRef.current) {
-            rotationCoordinatorUploadButtonRef.current.open(e);
+        if (ref?.current) {
+            ref?.current.open(e);
         }
     };
 
     const handleOnFileLoad = (data) => {
         let file;
-        if (
-            rotationCoordinatorUploadButtonRef.current &&
-            rotationCoordinatorUploadButtonRef.current.inputFileRef.current.files.length > 0
-        ) {
-            file = rotationCoordinatorUploadButtonRef.current.inputFileRef.current.files[0];
+        if (ref?.current && ref?.current.inputFileRef.current.files.length > 0) {
+            file = ref?.current.inputFileRef.current.files[0];
         }
 
         props.onFileLoad(data, file);
@@ -34,25 +29,28 @@ export default function RotationCoordinatorCSVReader(props) {
 
     const handleRemoveFile = (e) => {
         // Note that the ref is set async, so it might be null at some point
-        if (rotationCoordinatorUploadButtonRef.current) {
-            rotationCoordinatorUploadButtonRef.current.removeFile();
+        if (ref.current) {
+            ref?.current.removeFile();
         }
         onRemoveFile();
     };
 
     useEffect(() => {
-        const fileLoaded = rotationCoordinatorUploadButtonRef.current.inputFileRef?.current?.files?.[0];
+        if (!currentFileLoadedName && ref?.current) {
+            ref?.current.removeFile();
+        }
+    }, [currentFileLoadedName]);
+
+    useEffect(() => {
+        const fileLoaded = ref?.current.inputFileRef?.current?.files?.[0];
         if (fileLoaded) {
             reportFileName(fileLoaded.name);
         }
-    }, [
-        rotationCoordinatorUploadButtonRef.current,
-        rotationCoordinatorUploadButtonRef.current?.inputFileRef.current.files.length,
-    ]);
+    }, [ref?.current, ref?.current?.inputFileRef.current.files.length]);
 
     return (
         <CSVReader
-            ref={rotationCoordinatorUploadButtonRef}
+            ref={ref}
             onFileLoad={handleOnFileLoad}
             onError={handleOnError}
             noClick
@@ -64,9 +62,6 @@ export default function RotationCoordinatorCSVReader(props) {
                 //worker: true,
                 step: props.stepFunction,
                 complete: props.completeFunction,
-                beforeFirstChunk: function () {
-                    console.log("FIRST!");
-                },
             }}
         >
             {({ file }) => (
@@ -79,7 +74,7 @@ export default function RotationCoordinatorCSVReader(props) {
                 >
                     <div
                         style={{
-                            backgroundColor: theme.palette.RCData.primary,
+                            backgroundColor: inputBackgroundColor,
                             borderWidth: 1,
                             borderStyle: "solid",
                             borderColor: "#ccc",
@@ -101,12 +96,21 @@ export default function RotationCoordinatorCSVReader(props) {
                         </Button>
                     )}
                     {(file || currentFileLoadedName) && (
-                        <Button onClick={handleRemoveFile} variant='outlined' color='secondary'>
-                            Remove
+                        <Button
+                            onClick={handleRemoveFile}
+                            variant='outlined'
+                            color='secondary'
+                            sx={{ minWidth: "7em" }}
+                        >
+                            {!currentFileLoadedName ? <CircularProgress size={30} /> : "Remove"}
                         </Button>
                     )}
                 </aside>
             )}
         </CSVReader>
     );
-}
+});
+
+UploadCSVReader.displayName = "UploadCSVReader";
+
+export default UploadCSVReader;

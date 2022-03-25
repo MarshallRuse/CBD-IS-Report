@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button, Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
@@ -23,7 +23,7 @@ const finishedLabelVariants = {
 const steps = ["Rotation Data", "Rotation Coordinator Data", "EPA Data"];
 
 export default function UploadStepper(props) {
-    const { activeStep, changeActiveStep, canProceed = false } = props;
+    const { activeStep, changeActiveStep, canProceed = false, canReset = false, resetUploads } = props;
     const theme = useTheme();
 
     const handleNext = () => {
@@ -35,7 +35,7 @@ export default function UploadStepper(props) {
     };
 
     const handleReset = () => {
-        changeActiveStep(0);
+        resetUploads();
     };
 
     return (
@@ -59,6 +59,17 @@ export default function UploadStepper(props) {
                 </>
             ) : (
                 <Box sx={{ display: "flex", justifyContent: "center", gap: "2em", pt: 3 }}>
+                    {canReset && (
+                        <Button
+                            color='secondary'
+                            variant='outlined'
+                            disabled={!canReset}
+                            onClick={handleReset}
+                            sx={{ mr: 1, opacity: canReset ? 1 : 0 }}
+                        >
+                            Reset
+                        </Button>
+                    )}
                     <Button color='inherit' disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
                         Back
                     </Button>
@@ -70,6 +81,7 @@ export default function UploadStepper(props) {
                     {activeStep === steps.length - 1 && (
                         <motion.div
                             variants={finishedLabelVariants}
+                            initial='hidden'
                             animate={canProceed ? "visible" : "hidden"}
                             style={{
                                 backgroundColor: theme.palette.official.main,

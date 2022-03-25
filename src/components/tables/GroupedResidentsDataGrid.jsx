@@ -2,28 +2,7 @@ import { useState, useEffect } from "react";
 import { Grid, Tooltip, tooltipClasses } from "@mui/material";
 import { DataGrid, GridToolbarContainer, GridToolbarExport } from "@mui/x-data-grid";
 import { styled } from "@mui/material/styles";
-
-const WrapLineBreaks = styled("span")({
-    lineHeight: "1.5em",
-    whiteSpace: "pre",
-});
-
-const WrappingTooltip = styled(({ className, ...props }) => <Tooltip {...props} classes={{ popper: className }} />)(
-    ({ theme }) => ({
-        [`& .${tooltipClasses.tooltip}`]: {
-            lineHeight: "1.5em",
-            whiteSpace: "pre",
-        },
-    })
-);
-
-const formatAsWrappingCell = (params) => {
-    return (
-        <WrappingTooltip title={params.value} style={{ whiteSpace: "pre" }}>
-            <WrapLineBreaks>{params.value}</WrapLineBreaks>
-        </WrappingTooltip>
-    );
-};
+import { formatAsWrappingCell } from "../StyledComponents.jsx";
 
 const defaultMinColWidth = 200;
 const columns = [
@@ -223,17 +202,17 @@ export default function GroupedResidentsDataGrid(props) {
                         getRowHeight={(params) => {
                             //console.log("params: ", params);
                             const maxLinesInRow = Math.max(
-                                params.model.PGY1s.split("\n").length,
-                                params.model.PGY2s.split("\n").length,
-                                params.model.PGY3s.split("\n").length,
-                                params.model.JuniorPriority.split("\n").length,
-                                params.model.JuniorDoWhenYouCan.split("\n").length,
-                                params.model.JuniorOptional.split("\n").length,
-                                params.model.SeniorPriority.split("\n").length,
-                                params.model.SeniorDoWhenYouCan.split("\n").length,
-                                params.model.SeniorOptional.split("\n").length,
-                                params.model.JuniorRotationCards.split("\n").length,
-                                params.model.SeniorRotationCards.split("\n").length
+                                params.model.PGY1s?.split("\n").length,
+                                params.model.PGY2s?.split("\n").length,
+                                params.model.PGY3s?.split("\n").length,
+                                params.model.JuniorPriority?.split("\n").length,
+                                params.model.JuniorDoWhenYouCan?.split("\n").length,
+                                params.model.JuniorOptional?.split("\n").length,
+                                params.model.SeniorPriority?.split("\n").length,
+                                params.model.SeniorDoWhenYouCan?.split("\n").length,
+                                params.model.SeniorOptional?.split("\n").length,
+                                params.model.JuniorRotationCards?.split("\n").length,
+                                params.model.SeniorRotationCards?.split("\n").length
                             );
                             if (maxLinesInRow > 1) {
                                 return 30 + 20 * maxLinesInRow;
