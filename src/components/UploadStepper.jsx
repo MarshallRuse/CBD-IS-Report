@@ -90,7 +90,7 @@ export default function UploadStepper(props) {
                                 padding: "6px 8px",
                             }}
                         >
-                            Finished!
+                            Done
                         </motion.div>
                     )}
                 </Box>

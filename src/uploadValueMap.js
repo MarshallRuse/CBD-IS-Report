@@ -1,9 +1,13 @@
 // uploadKey is the header value as it appears in the uploaded CSV
 // outputKey is the header value as it appears in the final output tables
+let rotationUIDCounter = 0;
+let rotationCoordinatorUIDCounter = 0;
+let EPAUIDCounter = 0;
+
 export const rotationHeaderValues = [
     {
         transformationFunction: (data) => {
-            return `${data["Power ID"]}-${data["Period"]}`;
+            return `${data["Power ID"]}-${data["Period"]}-${++rotationUIDCounter}`;
         },
         outputKey: "id",
     },
@@ -65,7 +69,7 @@ export const rotationExampleBodyValues = [
 export const rotationCoordinatorHeaderValues = [
     {
         transformationFunction: (data) => {
-            return `${data["Rotation"]}-${data["Site"]}`;
+            return `${data["Rotation"]}-${data["Site"]}-${++rotationCoordinatorUIDCounter}`;
         },
         outputKey: "id",
     },
@@ -106,7 +110,7 @@ export const rotationCoordinatorExampleBodyValues = [
 export const EPAsHeaderValues = [
     {
         transformationFunction: (data) => {
-            return `${data["Rotation"]}-${data["Stage"]}`;
+            return `${data["Rotation"]}-${data["Stage"]}-${++EPAUIDCounter}`;
         },
         outputKey: "id",
     },

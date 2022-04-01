@@ -1,13 +1,16 @@
-import { useState, forwardRef } from "react";
+import { useState, forwardRef, useEffect } from "react";
 import { IconButton, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Info } from "@mui/icons-material";
+import { motion } from "framer-motion";
 import UploadCSVReader from "./csv-readers/UploadCSVReader";
 import UploadStatusMessage from "../UploadStatusMessage";
 import { InputContainer, InputLabel, InfoPanel } from "../StyledComponents";
 import ExampleTable from "../tables/ExampleTable";
 
-const HeaderListItem = styled("li")((props) => ({
+const HeaderListItem = styled("li", {
+    shouldForwardProp: (props) => props !== "missingValue",
+})((props) => ({
     backgroundColor: props.missingValue ? props.theme.palette.secondary.main : "none",
     borderRadius: "4px",
     color: props.missingValue ? "#fff" : "inherit",
@@ -31,7 +34,6 @@ const UploadInput = forwardRef((props, ref) => {
         inputBackgroundColor = "none",
     } = props;
     const [infoPanelOpen, setInfoPanelOpen] = useState(false);
-    const [uploaded, setUploaded] = useState(false);
     const [missingHeaders, setMissingHeaders] = useState([]);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
@@ -70,7 +72,7 @@ const UploadInput = forwardRef((props, ref) => {
         // Header value mappings are defined in uploadValueMap.js
         // the headerValues array will either have an "uploadKey" property if the data exists in the uploaded file,
         // or "transformationFunction" to return some value if its a transformation of some other values
-        headerValues.forEach((hvObj) => {
+        headerValues.forEach((hvObj, index) => {
             relevantData[hvObj.outputKey] = hvObj.uploadKey
                 ? data[hvObj.uploadKey]
                 : hvObj.transformationFunction(data);
@@ -90,21 +92,28 @@ const UploadInput = forwardRef((props, ref) => {
             setAlertMessage(`${uploadTitle} uploaded!`);
             setAlertType("success");
         }
-        setUploaded(true);
     };
 
     const handleOnError = (err, file, inputElem, reason) => {
+        setAlertMessage("Upload Error - Check Console");
+        setAlertType("error");
         console.log(err);
     };
 
     const handleOnRemoveDataFile = (data) => {
         onDataRemoved();
-        setUploaded(false);
         setMissingHeaders([]);
         setAlertMessage("");
         setAlertType("");
     };
 
+    useEffect(() => {
+        if (!fileName) {
+            setMissingHeaders([]);
+            setAlertMessage("");
+            setAlertType("");
+        }
+    }, [fileName]);
     return (
         <>
             <InputContainer>
@@ -113,7 +122,7 @@ const UploadInput = forwardRef((props, ref) => {
                     <IconButton size='large' onClick={() => setInfoPanelOpen(!infoPanelOpen)}>
                         <Info color={infoPanelOpen ? "primary" : "default"} />
                     </IconButton>
-                    <UploadStatusMessage message={alertMessage} display={uploaded} alertType={alertType} />
+                    <UploadStatusMessage message={alertMessage} display={!!fileName} alertType={alertType} />
                 </InputLabel>
 
                 <UploadCSVReader
@@ -127,36 +136,38 @@ const UploadInput = forwardRef((props, ref) => {
                     inputBackgroundColor={inputBackgroundColor}
                 />
             </InputContainer>
-            <InfoPanel
+            <motion.section
                 key={`${uploadTitle.replace(" ", "-")}-Info-Section`}
                 animate={infoPanelOpen ? "open" : "collapsed"}
                 variants={{
                     open: { opacity: 1, height: "auto" },
-                    collapsed: { opacity: 0, height: 0 },
+                    collapsed: { opacity: 0, height: 0, overflow: "hidden" },
                 }}
                 initial='collapsed'
                 transition={{ duration: 0.8, ease: [0.04, 0.62, 0.23, 0.98] }}
             >
-                <Typography variant='h5' component='h3' color='primary' sx={{ marginBottom: "1em" }}>
-                    <strong>{uploadTitle}</strong> Upload Instructions
-                </Typography>
-                <Typography>The file uploaded must be a CSV file (i.e. ".csv" file extension)</Typography>
-                <Typography>The data must have the following headers:</Typography>
-                <ul style={{ columnCount: Math.ceil(headerValues.filter((hv) => hv.uploadKey).length / 4) }}>
-                    {headerValues
-                        .filter((hv) => hv.uploadKey)
-                        .map((hv) => (
-                            <HeaderListItem
-                                key={`headers-required-${hv.uploadKey}`}
-                                missingValue={missingHeaders.includes(hv.uploadKey)}
-                            >
-                                {hv.uploadKey}
-                            </HeaderListItem>
-                        ))}
-                </ul>
-                <Typography>Together with values it will look something like this:</Typography>
-                <ExampleTable headerValues={headerValues} bodyValues={exampleBodyValues} />
-            </InfoPanel>
+                <InfoPanel>
+                    <Typography variant='h5' component='h3' color='primary' sx={{ marginBottom: "1em" }}>
+                        <strong>{uploadTitle}</strong> Upload Instructions
+                    </Typography>
+                    <Typography>The file uploaded must be a CSV file (i.e. ".csv" file extension)</Typography>
+                    <Typography>The data must have the following headers:</Typography>
+                    <ul style={{ columnCount: Math.ceil(headerValues.filter((hv) => hv.uploadKey).length / 4) }}>
+                        {headerValues
+                            .filter((hv) => hv.uploadKey)
+                            .map((hv) => (
+                                <HeaderListItem
+                                    key={`headers-required-${hv.uploadKey}`}
+                                    missingValue={missingHeaders.includes(hv.uploadKey)}
+                                >
+                                    {hv.uploadKey}
+                                </HeaderListItem>
+                            ))}
+                    </ul>
+                    <Typography>Together with values it will look something like this:</Typography>
+                    <ExampleTable headerValues={headerValues} bodyValues={exampleBodyValues} />
+                </InfoPanel>
+            </motion.section>
         </>
     );
 });

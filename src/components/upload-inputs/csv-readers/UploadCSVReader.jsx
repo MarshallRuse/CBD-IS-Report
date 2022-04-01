@@ -1,11 +1,9 @@
 import React, { useEffect, forwardRef } from "react";
 import { Button, CircularProgress } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { CSVReader } from "react-papaparse";
 
 const UploadCSVReader = forwardRef((props, ref) => {
     const { reportFileName, currentFileLoadedName, onRemoveFile, inputBackgroundColor } = props;
-    const theme = useTheme();
 
     const handleOpenDialog = (e) => {
         // Note that the ref is set async, so it might be null at some point

@@ -1,9 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Typography } from "@mui/material";
-import { styled, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
+import { GitHub } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
-import { PageColumn } from "./components/StyledComponents";
+import { Footer, Header, PageColumn, TablesList, TableSection } from "./components/StyledComponents";
 import UploadStepper from "./components/UploadStepper";
+import TableFilters from "./components/TableFilters";
 import UploadInput from "./components/upload-inputs/UploadInput";
 import AllRotationsDataGrid from "./components/tables/AllRotationsDataGrid";
 import GroupedResidentsDataGrid from "./components/tables/GroupedResidentsDataGrid";
@@ -15,21 +17,6 @@ import {
     EPAsHeaderValues,
     EPAsExampleBodyValues,
 } from "./uploadValueMap.js";
-
-const Header = styled("header")({
-    alignItems: "center",
-    background:
-        "linear-gradient(270deg, #005194, rgba(0, 71, 138, 0.7) 20%, rgba(0, 65, 132, 0.7) 50%, #003374 85%, #005194)",
-    color: "#fff",
-    display: "flex",
-    justifyContent: "center",
-    padding: "2.5em",
-});
-
-const TableSection = styled("div")({
-    marginTop: "2rem",
-    width: "100%",
-});
 
 const variants = {
     enter: (direction) => {
@@ -60,8 +47,14 @@ function App() {
 
     const theme = useTheme();
 
+    // stepper state
     const [[step, direction], setStep] = useState([0, 0]);
     const [canProceed, setCanProceed] = useState(false);
+    // filters state
+    const [blockFilter, setBlockFilter] = useState("");
+    const [programFilter, setProgramFilter] = useState("");
+    const [excludedRotations, setExcludedRotations] = useState([]);
+    // uploads state
     const [rotations, setRotations] = useState([]);
     const [rotationsFileName, setRotationsFileName] = useState("");
     const [juniorRotations, setJuniorRotations] = useState([]);
@@ -91,6 +84,21 @@ function App() {
         }
     };
 
+    // Filter controls
+    const handleBlockFilterChange = (blk) => setBlockFilter(String(blk));
+
+    const handleProgramFilterChange = (prog) => setProgramFilter(prog);
+
+    const handleExcludedRotationsFilterChange = (rots) => setExcludedRotations(rots);
+
+    const rotationFilterScreening = (rot) => {
+        return (
+            (!blockFilter ? true : rot.Block === blockFilter) &&
+            (!programFilter ? true : rot.TraineeProgram === programFilter) &&
+            !excludedRotations.includes(rot.Rotation)
+        );
+    };
+
     // Rotation formatting functions
     const groupByUniqueRotations = (rotationsData) => {
         const uniqueRotations = rotationsData
@@ -103,6 +111,7 @@ function App() {
             .map((row) => ({
                 id: `${row.Rotation}-${row.Hospital}`,
                 Block: row.Block,
+                TraineeProgram: row.TraineeProgram,
                 Rotation: row.Rotation,
                 Hospital: row.Hospital,
                 PGY1s: "",
@@ -207,6 +216,9 @@ function App() {
     const onRotationsDataRemoved = () => {
         setRotations([]);
         setRotationsFileName("");
+        setBlockFilter("");
+        setProgramFilter("");
+        setExcludedRotations([]);
         setRotationCoordinators([]);
         setRotationCoordinatorsFileName("");
         setEPAs([]);
@@ -315,6 +327,9 @@ function App() {
     const resetUploads = () => {
         setRotations([]);
         setRotationsFileName("");
+        setBlockFilter("");
+        setProgramFilter("");
+        setExcludedRotations([]);
         setRotationCoordinators([]);
         setRotationCoordinatorsFileName("");
         setEPAs([]);
@@ -392,7 +407,7 @@ function App() {
                 </AnimatePresence>
                 <AnimatePresence>
                     {rotations.length > 0 && (
-                        <motion.section
+                        <TablesList
                             key='tables'
                             initial='collapsed'
                             animate='open'
@@ -402,8 +417,27 @@ function App() {
                                 collapsed: { opacity: 0, height: 0 },
                             }}
                             transition={{ duration: 0.5, ease: "easeInOut" }}
-                            style={{ display: "flex", flexDirection: "column", gap: "3rem" }}
                         >
+                            <TableFilters
+                                blockValues={rotations
+                                    ?.map((rot) => rot.Block)
+                                    .filter((block, index, self) => self.indexOf(block) === index)
+                                    .sort((a, b) => parseInt(a.replace(/\D/g, "")) - parseInt(b.replace(/\D/g, "")))}
+                                blockSelected={blockFilter}
+                                handleBlockFilterChange={handleBlockFilterChange}
+                                programValues={rotations
+                                    ?.map((rot) => rot.TraineeProgram)
+                                    .filter((program, index, self) => self.indexOf(program) === index)
+                                    .sort()}
+                                programSelected={programFilter}
+                                handleProgramFilterChange={handleProgramFilterChange}
+                                excludedRotationValues={rotations
+                                    ?.map((rot) => rot.Rotation)
+                                    .filter((rot, index, self) => self.indexOf(rot) === index)
+                                    .sort()}
+                                excludedRotations={excludedRotations}
+                                handleExcludedRotationsFilterChange={handleExcludedRotationsFilterChange}
+                            />
                             <TableSection>
                                 <Typography
                                     variant='h4'
@@ -415,7 +449,7 @@ function App() {
                                     All Rotations - By Resident
                                 </Typography>
                                 <AllRotationsDataGrid
-                                    rotationsData={rotations}
+                                    rotationsData={rotations?.filter((rot) => rotationFilterScreening(rot))}
                                     rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                                     EPADataAvailable={EPAs.length > 0}
                                 />
@@ -431,7 +465,7 @@ function App() {
                                     Grouped Rotations - <strong>Juniors</strong> by Block-Rotation-Site
                                 </Typography>
                                 <GroupedResidentsDataGrid
-                                    rotationsData={juniorRotations}
+                                    rotationsData={juniorRotations?.filter((rot) => rotationFilterScreening(rot))}
                                     rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                                     EPADataAvailable={EPAs.length > 0}
                                     groupType='Juniors'
@@ -448,7 +482,7 @@ function App() {
                                     Grouped Rotations - <strong>Seniors</strong> by Block-Rotation-Site
                                 </Typography>
                                 <GroupedResidentsDataGrid
-                                    rotationsData={seniorRotations}
+                                    rotationsData={seniorRotations?.filter((rot) => rotationFilterScreening(rot))}
                                     rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                                     EPADataAvailable={EPAs.length > 0}
                                     groupType='Seniors'
@@ -465,15 +499,31 @@ function App() {
                                     Grouped Rotations - <strong>Juniors & Seniors</strong> by Block-Rotation-Site
                                 </Typography>
                                 <GroupedResidentsDataGrid
-                                    rotationsData={juniorAndSeniorRotations}
+                                    rotationsData={juniorAndSeniorRotations?.filter((rot) =>
+                                        rotationFilterScreening(rot)
+                                    )}
                                     rotationCoordinatorDataAvailable={rotationCoordinators.length > 0}
                                     EPADataAvailable={EPAs.length > 0}
                                     groupType='Juniors and Seniors'
                                 />
                             </TableSection>
-                        </motion.section>
+                        </TablesList>
                     )}
                 </AnimatePresence>
+                <Footer>
+                    <div>
+                        Notice an issue?{" "}
+                        <a href='mailto:ruse.marshall@gmail.com; marshall.ruse@utoronto.ca?subject=Issue Report: Rotation Coordinator Report Formatter'>
+                            Contact me.
+                        </a>
+                    </div>
+                    <div className='source'>
+                        <a href='https://github.com/MarshallRuse/rotation-coordinator-data-formatter' target='_blank'>
+                            <GitHub />
+                            Source
+                        </a>
+                    </div>
+                </Footer>
             </PageColumn>
         </>
     );
