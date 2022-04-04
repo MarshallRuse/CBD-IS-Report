@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
 import { styled } from "@mui/material/styles";
+import DoneUploadingDialog from "./DoneUploadingDialog";
 
 const Container = styled(Box)({
     backgroundColor: "#FAFAFA",
@@ -10,6 +11,20 @@ const Container = styled(Box)({
     padding: "2rem",
     width: "100%",
 });
+
+const DoneButton = styled(motion.button)(({ theme }) => ({
+    backgroundColor: theme.palette.official.main,
+    borderRadius: "4px",
+    color: "#fff",
+    padding: "6px 8px",
+    transition: "background-color 0.2s ease-in-out",
+    "&:hover": {
+        backgroundColor: theme.palette.primary.main,
+    },
+    "&:focus": {
+        backgroundColor: theme.palette.primary.dark,
+    },
+}));
 
 const finishedLabelVariants = {
     visible: {
@@ -26,6 +41,8 @@ export default function UploadStepper(props) {
     const { activeStep, changeActiveStep, canProceed = false, canReset = false, resetUploads } = props;
     const theme = useTheme();
 
+    const [doneUploadingDialogOpen, setDoneUploadingDialogOpen] = useState(false);
+
     const handleNext = () => {
         changeActiveStep(1);
     };
@@ -37,6 +54,16 @@ export default function UploadStepper(props) {
     const handleReset = () => {
         resetUploads();
     };
+
+    const handleCloseDialog = () => {
+        setDoneUploadingDialogOpen(false);
+    };
+
+    useEffect(() => {
+        if (activeStep === steps.length - 1 && canProceed) {
+            setDoneUploadingDialogOpen(true);
+        }
+    }, [activeStep, canProceed]);
 
     return (
         <Container>
@@ -79,20 +106,16 @@ export default function UploadStepper(props) {
                         </Button>
                     )}
                     {activeStep === steps.length - 1 && (
-                        <motion.div
+                        <DoneButton
                             variants={finishedLabelVariants}
                             initial='hidden'
                             animate={canProceed ? "visible" : "hidden"}
-                            style={{
-                                backgroundColor: theme.palette.official.main,
-                                borderRadius: "4px",
-                                color: "#fff",
-                                padding: "6px 8px",
-                            }}
+                            onClick={() => setDoneUploadingDialogOpen(true)}
                         >
                             Done
-                        </motion.div>
+                        </DoneButton>
                     )}
+                    <DoneUploadingDialog open={doneUploadingDialogOpen} closeDialog={handleCloseDialog} />
                 </Box>
             )}
         </Container>

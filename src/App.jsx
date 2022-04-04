@@ -244,7 +244,7 @@ function App() {
     };
 
     // Rotation Coordinator Uplaod Handler
-    const onRotationCoordinatorDataLoaded = (data) => {
+    const onRotationCoordinatorDataLoaded = (data, missingHeaders = []) => {
         setRotationCoordinators(data);
         const RCAugmentedRotations = augmentRotationsWithRCData(rotations, data);
         setRotations(RCAugmentedRotations);
@@ -254,7 +254,9 @@ function App() {
         setSeniorRotations(filterOnlySeniors(groupedRCAugmentedRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedRCAugmentedRotations));
         // Move on to next step - uploading EPA Data
-        setCanProceed(true);
+        if (missingHeaders.length === 0) {
+            setCanProceed(true);
+        }
     };
 
     const reportRotationCoordinatorsFileName = (name) => {
@@ -301,7 +303,7 @@ function App() {
     };
 
     // EPA Upload Handler
-    const onEPADataLoaded = (data) => {
+    const onEPADataLoaded = (data, missingHeaders = []) => {
         setEPAs(data);
         const EPAAugmentedRotations = augmentRotationsWithEPAData(rotations, data);
         setRotations(EPAAugmentedRotations);
@@ -311,7 +313,9 @@ function App() {
         setSeniorRotations(filterOnlySeniors(groupedEPAAugmentedRotations));
         setJuniorAndSeniorRotations(filterOnlyJuniorsAndSeniors(groupedEPAAugmentedRotations));
 
-        setCanProceed(true);
+        if (missingHeaders.length === 0) {
+            setCanProceed(true);
+        }
     };
 
     const reportEPAsFileName = (name) => {
