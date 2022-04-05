@@ -3,22 +3,13 @@ import { Button, CircularProgress } from "@mui/material";
 import { CSVReader } from "react-papaparse";
 
 const UploadCSVReader = forwardRef((props, ref) => {
-    const { reportFileName, currentFileLoadedName, onRemoveFile, inputBackgroundColor } = props;
+    const { currentFileLoadedName, onFileLoaded, onRemoveFile, inputBackgroundColor } = props;
 
     const handleOpenDialog = (e) => {
         // Note that the ref is set async, so it might be null at some point
         if (ref?.current) {
             ref?.current.open(e);
         }
-    };
-
-    const handleOnFileLoad = (data) => {
-        let file;
-        if (ref?.current && ref?.current.inputFileRef.current.files.length > 0) {
-            file = ref?.current.inputFileRef.current.files[0];
-        }
-
-        props.onFileLoad(data, file);
     };
 
     const handleOnError = (err, file, inputElem, reason) => {
@@ -42,14 +33,13 @@ const UploadCSVReader = forwardRef((props, ref) => {
     useEffect(() => {
         const fileLoaded = ref?.current.inputFileRef?.current?.files?.[0];
         if (fileLoaded) {
-            reportFileName(fileLoaded.name);
+            onFileLoaded(fileLoaded.name);
         }
     }, [ref?.current, ref?.current?.inputFileRef.current.files.length]);
 
     return (
         <CSVReader
             ref={ref}
-            onFileLoad={handleOnFileLoad}
             onError={handleOnError}
             noClick
             noDrag

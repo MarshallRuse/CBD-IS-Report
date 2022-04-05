@@ -24,9 +24,9 @@ const HeaderListItem = styled("li", {
 const UploadInput = forwardRef((props, ref) => {
     const {
         onDataLoaded,
+        onMetaDataChanged,
         onDataRemoved,
-        reportFileName,
-        fileName,
+        uploadMetaData,
         uploadTitle,
         headerValues,
         exampleBodyValues,
@@ -35,8 +35,6 @@ const UploadInput = forwardRef((props, ref) => {
     } = props;
     const [infoPanelOpen, setInfoPanelOpen] = useState(false);
     const [missingHeaders, setMissingHeaders] = useState([]);
-    const [alertMessage, setAlertMessage] = useState("");
-    const [alertType, setAlertType] = useState("");
 
     const dataRows = [];
     let headersEstablished = false;
@@ -52,7 +50,7 @@ const UploadInput = forwardRef((props, ref) => {
         return newObj;
     };
 
-    const processDataRow = (results, parser) => {
+    const processDataRow = (results) => {
         let { data } = results;
 
         // only need to establish headers once
@@ -81,39 +79,52 @@ const UploadInput = forwardRef((props, ref) => {
         dataRows.push(relevantData);
     };
 
-    const allDataRowsProcessed = (_, file) => {
+    const allDataRowsProcessed = () => {
         onDataLoaded(dataRows, missedHeaders);
         setMissingHeaders(missedHeaders);
-        if (missedHeaders.length > 0) {
-            setAlertMessage("Upload Error: Missing Headers");
-            setAlertType("error");
-            setInfoPanelOpen(true);
+        if (missedHeaders.length === 0) {
+            onMetaDataChanged({
+                uploadMessageText: `${uploadTitle} uploaded!`,
+                uploadMessageType: "success",
+                displayMessaging: true,
+            });
         } else {
-            setAlertMessage(`${uploadTitle} uploaded!`);
-            setAlertType("success");
+            onMetaDataChanged({
+                uploadMessageText: "Upload Error: Missing Headers",
+                uploadMessageType: "error",
+                displayMessaging: true,
+            });
+            setInfoPanelOpen(true);
         }
     };
 
     const handleOnError = (err, file, inputElem, reason) => {
-        setAlertMessage("Upload Error - Check Console");
-        setAlertType("error");
+        onMetaDataChanged({
+            fileName: "",
+            uploadMessageText: "Upload Error - Check Console",
+            uploadMessageType: "error",
+            displayMessaging: true,
+        });
         console.log(err);
+    };
+
+    const handleOnLoadDataFile = (fileName) => {
+        onMetaDataChanged({
+            fileName,
+        });
     };
 
     const handleOnRemoveDataFile = (data) => {
         onDataRemoved();
+        onMetaDataChanged({
+            fileName: "",
+            uploadMessageText: "",
+            uploadMessageType: "",
+            displayMessaging: false,
+        });
         setMissingHeaders([]);
-        setAlertMessage("");
-        setAlertType("");
     };
 
-    useEffect(() => {
-        if (!fileName) {
-            setMissingHeaders([]);
-            setAlertMessage("");
-            setAlertType("");
-        }
-    }, [fileName]);
     return (
         <>
             <InputContainer>
@@ -122,7 +133,11 @@ const UploadInput = forwardRef((props, ref) => {
                     <IconButton size='large' onClick={() => setInfoPanelOpen(!infoPanelOpen)}>
                         <Info color={infoPanelOpen ? "primary" : "default"} />
                     </IconButton>
-                    <UploadStatusMessage message={alertMessage} display={!!fileName} alertType={alertType} />
+                    <UploadStatusMessage
+                        message={uploadMetaData.uploadMessageText}
+                        display={uploadMetaData.displayMessaging}
+                        alertType={uploadMetaData.uploadMessageType}
+                    />
                 </InputLabel>
 
                 <UploadCSVReader
@@ -130,9 +145,9 @@ const UploadInput = forwardRef((props, ref) => {
                     stepFunction={processDataRow}
                     completeFunction={allDataRowsProcessed}
                     onError={handleOnError}
+                    onFileLoaded={handleOnLoadDataFile}
                     onRemoveFile={handleOnRemoveDataFile}
-                    reportFileName={reportFileName}
-                    currentFileLoadedName={fileName}
+                    currentFileLoadedName={uploadMetaData.fileName}
                     inputBackgroundColor={inputBackgroundColor}
                 />
             </InputContainer>

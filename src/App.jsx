@@ -39,6 +39,13 @@ const variants = {
     },
 };
 
+const defaultMetaDataObject = {
+    displayMessaging: false,
+    fileName: "",
+    uploadMessageText: "",
+    uploadMessageType: "",
+};
+
 function App() {
     // Upload button refs
     const rotationsUploadButtonRef = useRef(null);
@@ -56,14 +63,16 @@ function App() {
     const [excludedRotations, setExcludedRotations] = useState([]);
     // uploads state
     const [rotations, setRotations] = useState([]);
-    const [rotationsFileName, setRotationsFileName] = useState("");
+    const [rotationsUploadMetaData, setRotationsUploadMetaData] = useState({ ...defaultMetaDataObject });
     const [juniorRotations, setJuniorRotations] = useState([]);
     const [seniorRotations, setSeniorRotations] = useState([]);
     const [juniorAndSeniorRotations, setJuniorAndSeniorRotations] = useState([]);
     const [rotationCoordinators, setRotationCoordinators] = useState([]);
-    const [rotationCoordinatorsFileName, setRotationCoordinatorsFileName] = useState("");
+    const [rotationCoordinatorsUploadMetaData, setRotationCoordinatorsUploadMetaData] = useState({
+        ...defaultMetaDataObject,
+    });
     const [EPAs, setEPAs] = useState([]);
-    const [EPAsFileName, setEPAsFileName] = useState("");
+    const [EPAsUploadMetaData, setEPAsUploadMetaData] = useState({ ...defaultMetaDataObject });
 
     // Stepper Controls
     const changeActiveStep = (direction) => {
@@ -209,20 +218,20 @@ function App() {
         }
     };
 
-    const reportRotationsFileName = (name) => {
-        setRotationsFileName(name);
+    const onRotationsFileMetaDataChanged = (metadata) => {
+        setRotationsUploadMetaData((prevMetaData) => ({ ...prevMetaData, ...metadata }));
     };
 
     const onRotationsDataRemoved = () => {
         setRotations([]);
-        setRotationsFileName("");
+        setRotationsUploadMetaData({ ...defaultMetaDataObject });
         setBlockFilter("");
         setProgramFilter("");
         setExcludedRotations([]);
         setRotationCoordinators([]);
-        setRotationCoordinatorsFileName("");
+        setRotationCoordinatorsUploadMetaData({ ...defaultMetaDataObject });
         setEPAs([]);
-        setEPAsFileName("");
+        setEPAsUploadMetaData({ ...defaultMetaDataObject });
         setCanProceed(false);
     };
 
@@ -259,15 +268,13 @@ function App() {
         }
     };
 
-    const reportRotationCoordinatorsFileName = (name) => {
-        setRotationCoordinatorsFileName(name);
+    const onRotationCoordinatorsFileMetaDataChanged = (metadata) => {
+        setRotationCoordinatorsUploadMetaData((prevMetaData) => ({ ...prevMetaData, ...metadata }));
     };
 
     const onRotationCoordinatorsDataRemoved = () => {
         setRotationCoordinators([]);
-        setRotationCoordinatorsFileName("");
         setEPAs([]);
-        setEPAsFileName("");
         setCanProceed(false);
     };
 
@@ -318,26 +325,25 @@ function App() {
         }
     };
 
-    const reportEPAsFileName = (name) => {
-        setEPAsFileName(name);
+    const onEPAsFileMetaDataChanged = (metadata) => {
+        setEPAsUploadMetaData((prevMetaData) => ({ ...prevMetaData, ...metadata }));
     };
 
     const onEPAsDataRemoved = () => {
         setEPAs([]);
-        setEPAsFileName("");
         setCanProceed(false);
     };
 
     const resetUploads = () => {
         setRotations([]);
-        setRotationsFileName("");
+        setRotationsUploadMetaData({ ...defaultMetaDataObject });
         setBlockFilter("");
         setProgramFilter("");
         setExcludedRotations([]);
         setRotationCoordinators([]);
-        setRotationCoordinatorsFileName("");
+        setRotationCoordinatorsUploadMetaData({ ...defaultMetaDataObject });
         setEPAs([]);
-        setEPAsFileName("");
+        setEPAsUploadMetaData({ ...defaultMetaDataObject });
         setCanProceed(false);
         setStep([0, -1]);
     };
@@ -374,8 +380,8 @@ function App() {
                                 ref={rotationsUploadButtonRef}
                                 onDataLoaded={onRotationsDataLoaded}
                                 onDataRemoved={onRotationsDataRemoved}
-                                reportFileName={reportRotationsFileName}
-                                fileName={rotationsFileName}
+                                onMetaDataChanged={onRotationsFileMetaDataChanged}
+                                uploadMetaData={rotationsUploadMetaData}
                                 uploadTitle={"Rotations"}
                                 headerValues={rotationHeaderValues}
                                 exampleBodyValues={rotationExampleBodyValues}
@@ -386,8 +392,8 @@ function App() {
                                 ref={rotationCoordinatorsUploadButtonRef}
                                 onDataLoaded={onRotationCoordinatorDataLoaded}
                                 onDataRemoved={onRotationCoordinatorsDataRemoved}
-                                reportFileName={reportRotationCoordinatorsFileName}
-                                fileName={rotationCoordinatorsFileName}
+                                onMetaDataChanged={onRotationCoordinatorsFileMetaDataChanged}
+                                uploadMetaData={rotationCoordinatorsUploadMetaData}
                                 uploadTitle={"Rotation Coordinators"}
                                 headerValues={rotationCoordinatorHeaderValues}
                                 exampleBodyValues={rotationCoordinatorExampleBodyValues}
@@ -399,8 +405,8 @@ function App() {
                                 ref={EPAsUploadButtonRef}
                                 onDataLoaded={onEPADataLoaded}
                                 onDataRemoved={onEPAsDataRemoved}
-                                reportFileName={reportEPAsFileName}
-                                fileName={EPAsFileName}
+                                onMetaDataChanged={onEPAsFileMetaDataChanged}
+                                uploadMetaData={EPAsUploadMetaData}
                                 uploadTitle={"EPAs"}
                                 headerValues={EPAsHeaderValues}
                                 exampleBodyValues={EPAsExampleBodyValues}
