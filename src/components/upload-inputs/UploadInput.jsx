@@ -30,6 +30,7 @@ const UploadInput = forwardRef((props, ref) => {
         uploadTitle,
         headerValues,
         exampleBodyValues,
+        additionalInfo = [],
         filterNulls = true,
         inputBackgroundColor = "none",
     } = props;
@@ -181,6 +182,20 @@ const UploadInput = forwardRef((props, ref) => {
                     </ul>
                     <Typography>Together with values it will look something like this:</Typography>
                     <ExampleTable headerValues={headerValues} bodyValues={exampleBodyValues} />
+                    {additionalInfo.length > 0 && (
+                        <>
+                            <Typography sx={{ pt: "2rem" }}>
+                                <strong>{additionalInfo.length === 1 ? "Note:" : "Notes"}</strong>
+                            </Typography>
+                            <ul>
+                                {additionalInfo.map((info) => (
+                                    <li>
+                                        <em>{info}</em>
+                                    </li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
                 </InfoPanel>
             </motion.section>
         </>

@@ -109,6 +109,11 @@ function App() {
     };
 
     // Rotation formatting functions
+
+    // Transform certain rotations
+    const replaceRotationValues = (row) => ({ ...row, Rotation: row.Rotation?.replace("/", " - ") });
+
+    // Group residents by rotation
     const groupByUniqueRotations = (rotationsData) => {
         const uniqueRotations = rotationsData
             .filter((row, ind, self) => {
@@ -207,7 +212,8 @@ function App() {
 
     // Rotation Upload handler
     const onRotationsDataLoaded = (data, missingHeaders = []) => {
-        setRotations(data);
+        const transformedRotations = data.map((row) => replaceRotationValues(row));
+        setRotations(transformedRotations);
         const uniqueRotations = groupByUniqueRotations(data);
         setJuniorRotations(filterOnlyJuniors(uniqueRotations));
         setSeniorRotations(filterOnlySeniors(uniqueRotations));
@@ -385,6 +391,10 @@ function App() {
                                 uploadTitle={"Rotations"}
                                 headerValues={rotationHeaderValues}
                                 exampleBodyValues={rotationExampleBodyValues}
+                                additionalInfo={[
+                                    'Rotations with "/" included have been replaced with " - " as Rotation ' +
+                                        'values are used to match on file paths, in which "/" is not a valid file-name character.',
+                                ]}
                             />
                         )}
                         {step === 1 && (
