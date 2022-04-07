@@ -100,9 +100,9 @@ export default function ExplanationPanel() {
                     <NumberedList>
                         <li>
                             Rotations exported from the{" "}
-                            <a href='https://www.orbs.utoronto.ca/' target='_blank'>
+                            <LinkTag href='https://www.orbs.utoronto.ca/' target='_blank'>
                                 Online Rotation & Base Hospital Scheduling (ORBS)
-                            </a>{" "}
+                            </LinkTag>{" "}
                         </li>
                         <li>
                             A reference table for the Rotation Coordinators of the rotations listed in the rotations
