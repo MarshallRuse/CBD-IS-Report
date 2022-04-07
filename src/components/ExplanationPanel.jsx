@@ -62,7 +62,7 @@ export default function ExplanationPanel() {
     const [panelOpen, setPanelOpen] = useState(false);
 
     return (
-        <>
+        <div>
             <Title onClick={() => setPanelOpen(!panelOpen)} component='h2' variant='h5'>
                 What is this?
                 <motion.span
@@ -141,6 +141,6 @@ export default function ExplanationPanel() {
                     </Typography>
                 </InfoPanel>
             </motion.section>
-        </>
+        </div>
     );
 }
