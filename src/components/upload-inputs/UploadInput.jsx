@@ -1,6 +1,6 @@
 import { useState, forwardRef, useEffect } from "react";
-import { IconButton, Typography } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { IconButton, Typography, useMediaQuery } from "@mui/material";
+import { styled, useTheme } from "@mui/material/styles";
 import { Info } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import UploadCSVReader from "./csv-readers/UploadCSVReader";
@@ -34,6 +34,9 @@ const UploadInput = forwardRef((props, ref) => {
         filterNulls = true,
         inputBackgroundColor = "none",
     } = props;
+
+    const theme = useTheme();
+    const smallScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const [infoPanelOpen, setInfoPanelOpen] = useState(false);
     const [missingHeaders, setMissingHeaders] = useState([]);
 
@@ -168,7 +171,13 @@ const UploadInput = forwardRef((props, ref) => {
                     </Typography>
                     <Typography>The file uploaded must be a CSV file (i.e. ".csv" file extension)</Typography>
                     <Typography>The data must have the following headers:</Typography>
-                    <ul style={{ columnCount: Math.ceil(headerValues.filter((hv) => hv.uploadKey).length / 4) }}>
+                    <ul
+                        style={{
+                            columnCount: Math.ceil(
+                                headerValues.filter((hv) => hv.uploadKey).length / (smallScreen ? 8 : 4)
+                            ),
+                        }}
+                    >
                         {headerValues
                             .filter((hv) => hv.uploadKey)
                             .map((hv) => (
