@@ -13,6 +13,32 @@ export const Header = styled("header")({
     padding: "2.5em",
 });
 
+export const LinkTag = styled("a")(({ theme }) => ({
+    color: theme.palette.primary.main,
+    textDecoration: "none",
+    position: "relative",
+    transition: "color 0.25s ease-out",
+    "&:after": {
+        content: '""',
+        position: "absolute",
+        bottom: -3,
+        left: 0,
+        backgroundColor: theme.palette.primary.main,
+        height: "2px",
+        transform: "scaleX(0)",
+        transformOrigin: "bottom right",
+        transition: "transform 0.25s ease-out",
+        width: "100%",
+    },
+    "&:hover, &:focus": {
+        color: theme.palette.primary.main,
+    },
+    "&:hover:after, &:focus:after": {
+        transform: "scaleX(1)",
+        transformOrigin: "bottom left",
+    },
+}));
+
 export const Footer = styled("footer")(({ theme }) => ({
     alignItems: "center",
     color: theme.palette.text.primary,
@@ -22,31 +48,6 @@ export const Footer = styled("footer")(({ theme }) => ({
     padding: "10px",
     width: "100%",
 
-    "& a": {
-        color: theme.palette.primary.main,
-        textDecoration: "none",
-        position: "relative",
-        transition: "color 0.25s ease-out",
-        "&:after": {
-            content: '""',
-            position: "absolute",
-            bottom: -3,
-            left: 0,
-            backgroundColor: theme.palette.primary.main,
-            height: "2px",
-            transform: "scaleX(0)",
-            transformOrigin: "bottom right",
-            transition: "transform 0.25s ease-out",
-            width: "100%",
-        },
-        "&:hover, &:focus": {
-            color: theme.palette.primary.main,
-        },
-        "&:hover:after, &:focus:after": {
-            transform: "scaleX(1)",
-            transformOrigin: "bottom left",
-        },
-    },
     "& .source a": {
         alignItems: "center",
         display: "flex",

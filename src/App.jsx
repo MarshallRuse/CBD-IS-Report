@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { GitHub } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
-import { Footer, Header, PageColumn, TablesList, TableSection } from "./components/StyledComponents";
+import { Footer, Header, LinkTag, PageColumn, TablesList, TableSection } from "./components/StyledComponents";
+import ExplanationPanel from "./components/ExplanationPanel";
 import UploadStepper from "./components/UploadStepper";
 import TableFilters from "./components/TableFilters";
 import UploadInput from "./components/upload-inputs/UploadInput";
@@ -367,6 +368,7 @@ function App() {
                     canReset={rotations.length > 0}
                     resetUploads={resetUploads}
                 />
+                <ExplanationPanel />
                 <AnimatePresence initial={false} custom={direction} exitBeforeEnter>
                     <motion.div
                         key={step}
@@ -533,15 +535,18 @@ function App() {
                 <Footer>
                     <div>
                         Notice an issue?{" "}
-                        <a href='mailto:ruse.marshall@gmail.com; marshall.ruse@utoronto.ca?subject=Issue Report: Rotation Coordinator Report Formatter'>
+                        <LinkTag href='mailto:ruse.marshall@gmail.com; marshall.ruse@utoronto.ca?subject=Issue Report: Rotation Coordinator Report Formatter'>
                             Contact me.
-                        </a>
+                        </LinkTag>
                     </div>
                     <div className='source'>
-                        <a href='https://github.com/MarshallRuse/rotation-coordinator-data-formatter' target='_blank'>
+                        <LinkTag
+                            href='https://github.com/MarshallRuse/rotation-coordinator-data-formatter'
+                            target='_blank'
+                        >
                             <GitHub />
                             Source
-                        </a>
+                        </LinkTag>
                     </div>
                 </Footer>
             </PageColumn>
