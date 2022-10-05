@@ -1,30 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
 import { styled } from "@mui/material/styles";
 import DoneUploadingDialog from "./DoneUploadingDialog";
-
-const Container = styled(Box)({
-    backgroundColor: "#FAFAFA",
-    margin: "1rem",
-    padding: "2rem",
-    width: "100%",
-});
-
-const DoneButton = styled(motion.button)(({ theme }) => ({
-    backgroundColor: theme.palette.official.main,
-    borderRadius: "4px",
-    color: "#fff",
-    padding: "6px 8px",
-    transition: "background-color 0.2s ease-in-out",
-    "&:hover": {
-        backgroundColor: theme.palette.primary.main,
-    },
-    "&:focus": {
-        backgroundColor: theme.palette.primary.dark,
-    },
-}));
 
 const finishedLabelVariants = {
     visible: {
@@ -35,12 +13,23 @@ const finishedLabelVariants = {
     },
 };
 
-const steps = ["Rotation Data", "Rotation Coordinator Data", "EPA Data"];
+const steps = ["Elentra Data", "Resident Data"];
 
-export default function UploadStepper(props) {
-    const { activeStep, changeActiveStep, canProceed = false, canReset = false, resetUploads } = props;
-    const theme = useTheme();
+type Props = {
+    activeStep: number;
+    changeActiveStep: (step: number) => void;
+    canProceed: boolean;
+    canReset: boolean;
+    resetUploads: () => void;
+};
 
+export default function UploadStepper({
+    activeStep,
+    changeActiveStep,
+    canProceed = false,
+    canReset = false,
+    resetUploads,
+}: Props) {
     const [doneUploadingDialogOpen, setDoneUploadingDialogOpen] = useState(false);
 
     const handleNext = () => {
@@ -66,7 +55,7 @@ export default function UploadStepper(props) {
     }, [activeStep, canProceed]);
 
     return (
-        <Container>
+        <div className='bg-gray-100 m-4 p-8 w-full'>
             <Stepper activeStep={activeStep} alternativeLabel>
                 {steps.map((label) => {
                     return (
@@ -106,18 +95,19 @@ export default function UploadStepper(props) {
                         </Button>
                     )}
                     {activeStep === steps.length - 1 && (
-                        <DoneButton
+                        <motion.button
+                            className='bg-official-500 rounded-md text-white py-2 px-1 transition hover:bg-official-400 focus:bg-official-400'
                             variants={finishedLabelVariants}
                             initial='hidden'
                             animate={canProceed ? "visible" : "hidden"}
                             onClick={() => setDoneUploadingDialogOpen(true)}
                         >
                             Done
-                        </DoneButton>
+                        </motion.button>
                     )}
                     <DoneUploadingDialog open={doneUploadingDialogOpen} closeDialog={handleCloseDialog} />
                 </Box>
             )}
-        </Container>
+        </div>
     );
 }

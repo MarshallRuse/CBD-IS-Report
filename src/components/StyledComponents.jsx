@@ -58,6 +58,7 @@ export const Footer = styled("footer")(({ theme }) => ({
 export const TablesList = styled(motion.section)({
     display: "flex",
     flexDirection: "column",
+    width: "100%",
 });
 
 export const TableSection = styled("div")({

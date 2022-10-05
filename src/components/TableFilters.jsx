@@ -4,6 +4,7 @@ import { Checkbox, FormControl, IconButton, InputLabel, MenuItem, OutlinedInput,
 import { Cancel, CancelOutlined, FilterList, WarningRounded } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { InfoPanel } from "./StyledComponents";
+import VirtualAutocomplete from "./VirtualAutocomplete";
 
 const FilterSection = styled("div")({
     alignItems: "center",
@@ -52,51 +53,22 @@ function getStyles(item, items, theme) {
 export default function TableFilters(props) {
     const theme = useTheme();
 
-    const {
-        blockValues = [],
-        blockSelected = "",
-        handleBlockFilterChange,
-        programValues = [],
-        programSelected = "",
-        handleProgramFilterChange,
-        excludedRotationValues = [],
-        excludedRotations = [],
-        handleExcludedRotationsFilterChange,
-    } = props;
+    const { excludedAssessorValues = [], excludedAssessors = [], handleExcludedAssessorsFilterChange } = props;
 
     const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
     const [displayInfoText, setDisplayInfoText] = useState(false);
 
-    const handleBlockSelectedChange = (e) => {
-        handleBlockFilterChange(e.target.value);
-    };
-
-    const handleProgramSelectedChange = (e) => {
-        handleProgramFilterChange(e.target.value);
-    };
-
-    const handleExcludedRotationsSelectedChange = (e) => {
-        handleExcludedRotationsFilterChange(e.target.value);
-    };
-
     useEffect(() => {
-        // Default values
-        // Block: earliest block included
-        handleBlockFilterChange(blockValues?.length > 0 ? blockValues[0] : "");
-        // If Core Medicine included, default to it
-        handleProgramFilterChange(programValues?.includes("Core Medicine") ? "Core Medicine" : "");
-        // If leaves or research blocks included, exclude them
-        handleExcludedRotationsFilterChange(
-            excludedRotationValues?.filter(
-                (rot) => rot?.toLowerCase().includes("leave") || rot?.toLowerCase().includes("research")
-            )
+        // If assessors with "PGME" included, exclude them, they're duplicate EPAs
+        handleExcludedAssessorsFilterChange(
+            excludedAssessorValues?.filter((assessor) => assessor?.toLowerCase().includes("pgme"))
         );
         // Have filters open by default if more than 1 block or program uploaded
-        if (blockValues.length > 1 || programValues.length > 1) {
+        if (excludedAssessorValues.length > 1) {
             setFiltersPanelOpen(true);
             setDisplayInfoText(true);
         }
-    }, []);
+    }, [excludedAssessorValues]);
 
     return (
         <FilterSection>
@@ -106,7 +78,7 @@ export default function TableFilters(props) {
             {displayInfoText && (
                 <FilterRow className='info-text'>
                     <WarningRounded />
-                    Multiple blocks or programs detected, please select the block and program desired.
+                    Assessors with "PGME" excluded by default, they are duplicate EPAs.
                 </FilterRow>
             )}
             <motion.div
@@ -122,76 +94,41 @@ export default function TableFilters(props) {
             >
                 <FilterContainer>
                     <FilterRow>
-                        <FormControl sx={{ m: 1, width: "100%" }}>
-                            <InputLabel id=''>Block</InputLabel>
+                        <VirtualAutocomplete
+                            label='Excluded Assessors'
+                            options={excludedAssessorValues}
+                            value={excludedAssessors}
+                            onValueChange={(e, values) => handleExcludedAssessorsFilterChange(values)}
+                        />
+                        {/* <FormControl sx={{ m: 1, width: "100%" }}>
+                            <InputLabel id='excluded-assessors-filter-label'>Excluded Assessors</InputLabel>
                             <Select
-                                labelId='block-filter-label'
-                                id='block-filter-select'
-                                value={blockSelected}
-                                onChange={handleBlockSelectedChange}
-                                input={<OutlinedInput label='Block' />}
-                                MenuProps={MenuProps}
-                            >
-                                {blockValues?.map((block, index) => (
-                                    <MenuItem key={`${block}-${index}`} value={block}>
-                                        {block}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <FormControl sx={{ m: 1, width: "100%" }}>
-                            <InputLabel id='program-filter-label'>Program</InputLabel>
-                            <Select
-                                labelId='program-filter-label'
-                                id='program-filter-select'
-                                value={programSelected}
-                                onChange={handleProgramSelectedChange}
-                                input={<OutlinedInput label='Program' />}
-                                MenuProps={MenuProps}
-                            >
-                                {programValues?.map((program, index) => (
-                                    <MenuItem
-                                        key={`${program}-${index}`}
-                                        value={program === "" ? "Unlisted" : program}
-                                        style={getStyles(program, programValues, theme)}
-                                    >
-                                        {program === "" ? <em>Unlisted</em> : program}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </FilterRow>
-                    <FilterRow>
-                        <FormControl sx={{ m: 1, width: "100%" }}>
-                            <InputLabel id='excluded-rotations-filter-label'>Excluded Rotations</InputLabel>
-                            <Select
-                                labelId='excluded-rotations-filter-label'
-                                id='excluded-rotations-filter-select'
+                                labelId='excluded-assessors-filter-label'
+                                id='excluded-assessors-filter-select'
                                 multiple
-                                value={excludedRotations}
-                                onChange={handleExcludedRotationsSelectedChange}
-                                input={<OutlinedInput label='Excluded Rotations' />}
+                                value={excludedAssessors}
+                                onChange={handleExcludedAssessorsSelectedChange}
+                                input={<OutlinedInput label='Excluded Assessors' />}
                                 renderValue={(selected) => selected.join(", ")}
                                 MenuProps={MenuProps}
                             >
-                                {excludedRotationValues?.map((rotation, index) => (
+                                {excludedAssessorValues?.map((assessor, index) => (
                                     <MenuItem
-                                        key={`${rotation}-${index}`}
-                                        value={rotation === "" ? "Unlisted" : rotation}
-                                        style={getStyles(rotation, excludedRotationValues, theme)}
+                                        key={`${assessor}-${index}`}
+                                        value={assessor === "" ? "Unlisted" : assessor}
+                                        style={getStyles(assessor, excludedAssessorValues, theme)}
                                     >
                                         <Checkbox
-                                            checked={excludedRotations.indexOf(rotation) > -1}
+                                            checked={excludedAssessors.indexOf(assessor) > -1}
                                             icon={<CancelOutlined />}
                                             checkedIcon={<Cancel />}
                                             color='secondary'
                                         />
-                                        {rotation === "" ? <em>Unlisted</em> : rotation}
+                                        {assessor === "" ? <em>Unlisted</em> : assessor}
                                     </MenuItem>
                                 ))}
                             </Select>
-                        </FormControl>
+                        </FormControl> */}
                     </FilterRow>
                 </FilterContainer>
             </motion.div>
