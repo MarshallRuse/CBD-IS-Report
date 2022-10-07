@@ -22,6 +22,8 @@ import type { ResidentUploadData } from "./lib/interfaces/ResidentUploadData";
 import type { TableFilter } from "./lib/interfaces/TableFilters";
 import { UploadMetaData } from "./lib/interfaces/UploadMetaData";
 import { ResidentData, ResidentsData } from "./lib/interfaces/ResidentData";
+import { db } from "./db/db";
+import { useLiveQuery } from "dexie-react-hooks";
 
 dayjs.extend(isBetween);
 
@@ -54,6 +56,8 @@ const defaultMetaDataObject: UploadMetaData = {
 };
 
 function App() {
+    const elentraData = useLiveQuery(() => db.elentraData.toArray());
+    const elentraUploadMetaData = useLiveQuery(() => db.elentraUploadMetaData.toArray());
     // stepper state
     const [[step, direction], setStep] = useState([0, 0]);
     const [canProceed, setCanProceed] = useState(false);
@@ -67,8 +71,8 @@ function App() {
     ]);
 
     // uploads state
-    const [elentraData, setElentraData] = useState<IElentraUploadData[]>([]);
-    const [elentraUploadMetaData, setElentraUploadMetaData] = useState({ ...defaultMetaDataObject });
+    //const [elentraData, setElentraData] = useState<IElentraUploadData[]>([]);
+    //const [elentraUploadMetaData, setElentraUploadMetaData] = useState({ ...defaultMetaDataObject });
     const [residents, setResidents] = useState<ResidentsData>({});
     const [residentUploadMetaData, setResidentUploadMetaData] = useState({
         ...defaultMetaDataObject,
@@ -78,9 +82,9 @@ function App() {
     const changeActiveStep = (direction: number) => {
         const newStep = step + direction;
         setStep([step + direction, direction]);
-        if (newStep === 0 && elentraData.length > 0) {
+        if (newStep === 0 && elentraData && elentraData.length > 0) {
             setCanProceed(true);
-        } else if (newStep === 0 && elentraData.length === 0) {
+        } else if (newStep === 0 && elentraData?.length === 0) {
             setCanProceed(false);
         } else if (newStep === 1 && residents && Object.keys(residents).length > 0) {
             setCanProceed(true);
@@ -100,12 +104,18 @@ function App() {
     };
 
     // Elentra Upload handler
-    const onElentraDataLoaded = (
+    const onElentraDataLoaded = async (
         data: IElentraUploadData[],
         missingHeaders: string[] = [],
         filterValues: TableFilter[] = []
     ) => {
-        setElentraData(data);
+        try {
+            await db.elentraUploadData.bulkPut(data);
+        } catch (err) {
+            console.log("Error adding Elentra data to indexedDB", err);
+        }
+
+        //setElentraData(data);
         setElentraFilters(filterValues);
         // Move on to next step - uploading Rotation Coordinator Data
         if (missingHeaders.length === 0) {
@@ -113,13 +123,21 @@ function App() {
         }
     };
 
-    const onElentraFileMetaDataChanged = (metadata) => {
-        setElentraUploadMetaData((prevMetaData) => ({ ...prevMetaData, ...metadata }));
+    const onElentraFileMetaDataChanged = async (metadata: UploadMetaData) => {
+        try {
+            await db.elentraUploadMetaData.put({
+                fileName: metadata.fileName ? metadata.fileName : "",
+                dateUploaded: dayjs().toISOString(),
+            });
+        } catch (err) {
+            console.log("Error updating Elentra Upload Metadata in indexedDB", err);
+        }
+        //setElentraUploadMetaData((prevMetaData) => ({ ...prevMetaData, ...metadata }));
     };
 
     const onElentraDataRemoved = () => {
-        setElentraData([]);
-        setElentraUploadMetaData({ ...defaultMetaDataObject });
+        //setElentraData([]);
+        //setElentraUploadMetaData({ ...defaultMetaDataObject });
         setResidents({});
         setResidentUploadMetaData({ ...defaultMetaDataObject });
     };
@@ -215,12 +233,12 @@ function App() {
         return resData;
     };
 
-    // Rotation Coordinator Uplaod Handler
+    // Resident Data Uplaod Handler
     const setResidentDataLoaded = (data: ResidentUploadData[], missingHeaders: string[] = []) => {
         const processedResidents = processResidentData(data);
         setResidents(processedResidents);
-        const residentAugmentedElentraData = augmentElentraWithResidents(elentraData, processedResidents);
-        setElentraData(residentAugmentedElentraData);
+        //const residentAugmentedElentraData = augmentElentraWithResidents(elentraData, processedResidents);
+        //setElentraData(residentAugmentedElentraData);
 
         // Move on to next step - uploading EPA Data
         if (missingHeaders.length === 0) {
@@ -237,9 +255,11 @@ function App() {
         setCanProceed(false);
     };
 
-    const resetUploads = () => {
-        setElentraData([]);
-        setElentraUploadMetaData({ ...defaultMetaDataObject });
+    const resetUploads = async () => {
+        //setElentraData([]);
+        //setElentraUploadMetaData({ ...defaultMetaDataObject });
+        try {
+        } catch (err) {}
         setResidents({});
         setResidentUploadMetaData({ ...defaultMetaDataObject });
         setCanProceed(false);
@@ -256,7 +276,7 @@ function App() {
                     activeStep={step}
                     changeActiveStep={changeActiveStep}
                     canProceed={canProceed}
-                    canReset={elentraData.length > 0}
+                    canReset={!!elentraData && elentraData.length > 0}
                     resetUploads={resetUploads}
                 />
                 <ExplanationPanel />
@@ -301,7 +321,7 @@ function App() {
                     </motion.div>
                 </AnimatePresence>
                 <AnimatePresence>
-                    {elentraData.length > 0 && (
+                    {elentraData && elentraData.length > 0 && (
                         <TablesList
                             key='tables'
                             initial='collapsed'
@@ -334,7 +354,7 @@ function App() {
                                     Processed Elentra Data
                                 </Typography>
                                 <AllEPAsDataGrid
-                                    elentraData={elentraData.filter((row) => {
+                                    elentraData={elentraData?.filter((row) => {
                                         let passesFilter = true;
                                         for (const filter of elentraFilters) {
                                             if (filter.selectedExclusions.includes(row[filter.field])) {

@@ -1,6 +1,6 @@
 export type UploadMetaData = {
-    displayMessaging: boolean;
-    fileName: string;
-    uploadMessageText: string;
-    uploadMessageType: string;
+    displayMessaging?: boolean;
+    fileName?: string;
+    uploadMessageText?: string;
+    uploadMessageType?: string;
 };

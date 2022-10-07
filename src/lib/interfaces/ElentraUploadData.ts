@@ -1,6 +1,4 @@
-import { IGenericObject } from "./IGenericObject";
-
-export interface IElentraUploadData extends IGenericObject {
+export interface IElentraUploadData {
     id: number;
     AssessmentID: number;
     AssessmentFormCode: number;
@@ -25,6 +23,11 @@ export interface IElentraUploadData extends IGenericObject {
 }
 
 export type ElentraAugmentedUploadData = IElentraUploadData & {
-    TrainingLevelDateOfEncounter: string;
-    TrainingLevelCurrentYear: string;
+    TrainingLevelDateOfEncounter?: string;
+    TrainingLevelCurrentYear?: string;
+};
+
+export type ElentraUploadMetaData = {
+    fileName: string;
+    dateUploaded: string | null;
 };

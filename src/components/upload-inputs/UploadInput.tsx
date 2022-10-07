@@ -186,7 +186,7 @@ const UploadInput = ({
                 </h2>
 
                 <UploadCSVReader
-                    fileName={uploadMetaData.fileName}
+                    fileName={uploadMetaData.fileName ?? ""}
                     stepFunction={processDataRow}
                     processingDone={processingDone}
                     completeFunction={allDataRowsProcessed}
